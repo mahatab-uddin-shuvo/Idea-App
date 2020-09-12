@@ -1,0 +1,269 @@
+//select Database
+use datbaseName
+// Show All Database
+show dbs
+//view Currently working Database
+db
+//create collection
+db.createCollection('collectionName')
+//show all connection
+show collections
+//dropping Database
+db.dropDatabase()
+
+formate of mongodb
+//collection
+//document
+//key-value
+
+
+main code of db connection
+
+const { values, sortBy, toArray } = require('lodash');
+
+const mongoClient = require('mongodb').MongoClient
+
+const uri = 'mongodb://localhost:27017';
+const dbName = 'ideas-app'
+const client = new mongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+async function dbOps() {
+    try {
+        //connecting client 
+        await client.connect();
+        console.log('Client Connected Successfully');
+        //db reference
+        const db = client.db(dbName);
+
+         const ideasColl = db.collection('ideas');
+
+        //delete  
+        //insert
+        //find
+        //update
+
+        console.log(result)
+
+        //close connection
+        client.close()
+
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+dbOps();
+
+
+//inserting adding document
+        // const result = await ideasColl.insertOne({
+        //     // key : value
+        //     title : 'title 1',
+        //     description:'description 1',
+        //     likes:10,
+        //     category:['travel','fashion'] 
+        // })
+        // const result = await ideasColl.insertMany([{
+        //         // key : value
+        //         title : 'title 2',
+        //         description:'description 2',
+        //         likes:60,
+        //         category:['travel','fashion','business'] 
+        //     },
+        //     {
+        //         // key : value
+        //         title : 'title 3',
+        //         description:'description 3',
+        //         likes:60,
+        //         category:['travel'] 
+        //     },
+        //     {
+        //         // key : value
+        //         title : 'title 4',
+        //         description:'description 4',
+        //         likes:60,
+        //         category:['travel','business'] 
+        //     },
+        //     {
+        //         // key : value
+        //         title : 'title 5',
+        //         description:'description 5',
+        //         likes:90,
+        //     }
+        // ])
+        //console.log(result.ops)
+
+
+        //use find and find one 
+        //find hole ekta array return korbe tai toArray() method use korte hobe
+        //cursor method
+1.      const result = await ideasColl.findOne({
+            title: 'title 1'
+        })
+        console.log(result)
+
+2.      const result =   await ideasColl.find({
+            
+            category :'travel'
+        },{
+            projection:{
+                description:1,
+                _id:0
+            }
+        })
+        //.toArray()
+        //.count()
+        //.limit(2).toArray()
+        //.limit(2).skip(2).toArray()
+        //.sort({title:1}).toArray() //-1 decending
+        .toArray()
+        console.log(result)
+
+
+        //**Operator 
+        //in  [value 1, value 2]
+        //nin [value 1, value 2]
+        //eq   
+        //gt
+        //gte
+        //lt
+        //lte
+
+        //and
+        //or
+
+        //finding data(document)
+        const result =   await ideasColl.find({
+        // likes :{
+        //     $in : [10,60]  //range 10 theka 60 er moddhe
+        // }
+        // likes :{
+        //     $gt : 10
+        // }
+        // likes :{
+        //     $gte: 60
+        // }
+        likes :{
+            $gte: 60,
+            $lt:90
+        }
+        })
+        .toArray()
+        console.log(result)
+    
+        
+        //and - by default find means and operator
+         const result = await ideasColl.find({
+              title: 'title 1',
+              description: 'description 1'
+         }) .toArray()
+        console.log(result)
+
+
+        //or
+        const result = await ideasColl.find({
+            $or: [
+                {
+                    title: 'title 1'
+                },
+                {
+                    description: 'description 1'
+                }
+
+            ]
+        }).toArray()
+        
+        console.log(result)
+
+//** update 
+
+
+
+**By set operator
+1. const result  = await ideasColl.findOneAndUpdate({
+            title: 'title 2'
+        },{
+            $set : {
+                description : 'Updated Description 2'
+            }
+        },{
+              returnOriginal:false //return the correct console value
+        })
+         
+        console.log(result)
+
+
+2.  const ideasColl = db.collection('ideas');
+
+//update document
+
+        const result  = await ideasColl.updateOne({
+             title: 'updated title 1'
+         },{
+             $set : {
+                 description : 'Updated Description 1'
+             }
+         },{
+             upsert : true //check if the condition is false then create a document
+         })
+
+        console.log(result)
+
+
+**by inc operator 
+const result  = await ideasColl.findOneAndUpdate({
+            title: 'title 2'
+        },{
+            $inc : {
+                likes : 2
+            }
+        },{
+              returnOriginal:false
+        })
+         
+        console.log(result)
+
+
+**by pop operator 
+    //update 
+
+        const result  = await ideasColl.findOneAndUpdate({
+            title: 'title 2'
+        },{
+            $pop : {
+                category : -1 //eta 1st index pop hobe ar 1 hole last index pop hobe
+            }
+        },{
+              returnOriginal:false
+        })
+         
+        console.log(result)
+
+**by using push operator       
+
+const result  = await ideasColl.findOneAndUpdate({
+            title: 'title 2'
+        },{
+            $push : {
+                category : 'travel'
+            }
+        },{
+              returnOriginal:false
+        })
+         
+        console.log(result)
+
+
+
+// delete document
+const result = await ideasColl.findOneAndDelete({
+             title:'title 5'
+         })
+
+        console.log(result)
+
+
+
