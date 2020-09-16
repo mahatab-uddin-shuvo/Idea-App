@@ -3,26 +3,20 @@ const exphbs = require('express-handlebars');
 const methodOverride = require('method-override');
 const _ = require('lodash');
 const path = require('path');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const { check, validationResult } = require('express-validator');
 
-const app = express();
 const { compareValues, truncateContent } = require('./helpers/hbs')
 const Idea = require('./models/ideas');
-//database Connection
-async function connectDB() {
-    try {
-        await mongoose.connect('mongodb://localhost:27017/ideas-app', {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            useFindAndModify:false
-        });
-        console.log('Database Connected Successfully');
-    } catch (err) {
-        console.log(err)
-    }
-}
 
-connectDB();
+//database Connection
+const connectDB = require('./config/db')
+//doc helper
+const genarateIdeaDoc = require('./helpers/docGenate')
+
+connectDB()
+const app = express();
+
 
 app.engine('.hbs', exphbs({
     extname: '.hbs',
@@ -38,37 +32,8 @@ app.use(methodOverride('_method'))
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')))
 
-let ideas = [
-    {
-        id: 1,
-        title: 'Idea 1',
-        description: 'Idea 1 Description',
-        allowComments: true,
-        status: 'public'
-    },
-    {
-        id: 2,
-        title: 'Idea 2',
-        description: 'Idea 2 Description',
-        allowComments: false,
-        status: 'public'
-    },
-    {
-        id: 3,
-        title: 'Idea 3',
-        description: 'Idea 3 Description',
-        allowComments: true,
-        status: 'private'
-    }
-]
 
-function genarateIdeaDoc(id, title, description) {
-    return {
-        id,
-        title,
-        description
-    }
-}
+
 
 //home page 
 app.get('/', (req, res) => {
@@ -85,6 +50,13 @@ app.get('/about', (req, res) => {
         title: 'about us'
     })
 });
+//contact
+app.get('/contact', (req, res) => {
+    res.render('contact', {
+        text: 'Contact us',
+        title: 'Contact us'
+    })
+});
 
 //get all ideas
 app.get('/ideas', async (req, res) => {
@@ -94,7 +66,13 @@ app.get('/ideas', async (req, res) => {
         //avoiding handlebars errors related to child and parent referecting
         const contexts = {
             ideasDocuments: ideas.map(idea =>
-                genarateIdeaDoc(idea._id, idea.title, idea.description))
+                genarateIdeaDoc(
+                    idea._id,
+                    idea.title,
+                    idea.description,
+                    idea.allowComments,
+                    idea.status
+                ))
         };
         res.render('ideas/index', {
             ideas: contexts.ideasDocuments,
@@ -119,81 +97,162 @@ app.get('/ideas/new', (req, res) => {
 
 //show edit idea form
 
-app.get('/ideas/:id/edit', async(req, res) => {
+app.get('/ideas/:id/edit', async (req, res) => {
     const id = req.params.id;
-    try{
-        const idea =await Idea.findById(id)
-        const ideasDocument = genarateIdeaDoc(idea._id,idea.title,idea.description)
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        return res.render('NotFound')
+    }
+    try {
+        const idea = await Idea.findById(id)
+        
         if (idea) {
+            const ideasDocument = genarateIdeaDoc(
+                idea._id,
+                idea.title,
+                idea.description,
+                idea.allowComments,
+                idea.status
+            )
             res.render('ideas/edit', {
                 title: 'Edit title',
-                idea:ideasDocument
+                idea: ideasDocument
             })
         } else {
-            res.render('NotFound')
+            res.status(404).render('NotFound')
         }
-    }catch(err){
+    } catch (err) {
         console.log(err)
-        res.render('error')
+        res.status(500).render('error')
     }
-    
+
 })
 
 //add idea
-app.post('/ideas', async(req, res) => {
-    try{
+app.post('/ideas', [
+    check('title')
+        .notEmpty()
+        .withMessage('title must be required')
+        .isLength({ min: 2, max: 50 })
+        .withMessage('title must be 2 to 50 character long')
+        .trim(),
+
+    check('description', 'Description must be less then 10000 character')
+        .isLength({ max: 1000 }),
+
+    check('status')
+        .notEmpty()
+        .withMessage('status is required')
+        .isIn(['public', 'private'])
+        .withMessage('Status must be public or private')
+],  async (req, res) => {
+        const errors = validationResult(req)
+        //console.log(errors.array())
         const allowComments = req.body.allowComments ? true : false
-    //1    
-        const idea = new Idea ({
-             ...req.body,
-             allowComments
-         })
-         await idea.save()
 
-    // 2.    Idea.create({
-    //         ...req.body,
-    //         allowComments
-    //     })
+        if (!errors.isEmpty()) {
+            return res.render('ideas/new', {
+                title: 'Add Idea',
+                errMsg: errors.array()[0].msg,
+                idea: {
+                    title: req.body.title,
+                    description: req.body.description,
+                    allowComments,
+                    status: req.body.status
+                }
+            })
 
-         //redirect
-         res.redirect('/ideas');
-    }catch(err){
-        console.log(err);
-        res.render('error');
-    }
-    
-})
+        }
+
+        //1    
+        const idea = new Idea({
+            ...req.body,
+            allowComments
+        })
+        try {
+            await idea.save()
+
+            // 2.    Idea.create({
+            //         ...req.body,
+            //         allowComments
+            //     })
+
+            //redirect
+            res.redirect('/ideas');
+        } catch (err) {
+            console.log(err)
+            for (field in err.errors) {
+                console.log(err.errors[field].path,
+                    err.errors[field].message)
+            }
+            res.status(500).render('error');
+        }
+
+    })
 
 //show single route
 app.get('/ideas/:id', async (req, res) => {
     const id = req.params.id;
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        return res.render('NotFound')
+    }
     try {
         //get the idea
         const idea = await Idea.findById(id);
-        const ideasDocument = genarateIdeaDoc(idea._id, idea.title, idea.description)
+       
 
         if (idea) {
+            const ideasDocument = genarateIdeaDoc(
+                idea._id, 
+                idea.title, 
+                idea.description,
+                idea.allowComments,
+                idea.status
+                )
             res.render('ideas/show', {
                 title: "Single Idea",
                 idea: ideasDocument
             });
         } else {
-            res.render('NotFound')
+            res.status(404).render('NotFound')
         }
     } catch (err) {
         console.log(err)
-        res.render('error')
+        res.status(500).render('error')
     }
 
 })
 
 //update idea
-app.put('/ideas/:id',async (req, res) => {
+app.put('/ideas/:id', [
+    check('title')
+        .notEmpty()
+        .withMessage('title must be required')
+        .isLength({ min: 2, max: 50 })
+        .withMessage('title must be 2 to 50 character long')
+        .trim(),
+
+    check('description', 'Description must be less then 10000 character')
+        .isLength({ max: 1000 }),
+
+    check('status')
+        .notEmpty()
+        .withMessage('status is required')
+        .isIn(['public', 'private'])
+        .withMessage('Status must be public or private')
+], async (req, res) => {
     const id = req.params.id;
-    const allowComments = req.body.allowComments ? true : false
-    console.log(allowComments)
-    req.body.allowComments= allowComments;
-    
+    const errors = validationResult(req)
+
+    //1.   // const allowComments = req.body.allowComments ? true : false      
+    // console.log(allowComments)
+
+    // req.body.allowComments=allowComments
+    //2. 
+    if (req.body.allowComments === 'on') {
+        req.body.allowComments = true
+    } else {
+        req.body.allowComments = false
+    }
     const pickedValue = _.pick(req.body, [
         'title',
         'description',
@@ -201,35 +260,57 @@ app.put('/ideas/:id',async (req, res) => {
         'status'
     ]);
     console.log(pickedValue)
-    try{
-       const idea = await Idea.findByIdAndUpdate(id,pickedValue);
-        if(idea){
+
+    if (!errors.isEmpty()) {
+        return res.render('ideas/edit', {
+            title: 'Edit Idea',
+            errMsg: errors.array()[0].msg,
+            idea: {
+                id,
+                title: req.body.title,
+                description: req.body.description,
+                allowComments: req.body.allowComments,
+                status: req.body.status
+            }
+
+        })
+    }
+    try {
+        const idea = await Idea.findByIdAndUpdate(id, pickedValue);
+        if (idea) {
             res.redirect(`/ideas/${id}`);
         } else {
-            res.render('NotFound')
-    
+            res.status(404).render('NotFound')
+
         }
-    }catch(err){
+    } catch (err) {
         console.log(err);
-        res.render('error')
+        res.status(500).render('error')
     }
-   
+
 
 });
 
 //delete idea
-app.delete('/ideas/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    //get the idea
-    const idea = ideas.find(idea => idea.id === id);
-    if (idea) {
-        //remove the idea
-        ideas = ideas.filter(idea => idea.id !== id);
-        res.redirect('/ideas');
-
-    } else {
-        res.render('NotFound')
+app.delete('/ideas/:id', async (req, res) => {
+    const id = req.params.id;
+    if(!mongoose.Types.ObjectId.isValid(id)){
+        return res.render('NotFound')
     }
+    try {
+        
+        const idea = await Idea.findByIdAndDelete(id)
+        if (idea) {
+            res.redirect('/ideas');
+
+        } else {
+            res.status(404).render('NotFound')
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).render('error')
+    }
+
 
 })
 

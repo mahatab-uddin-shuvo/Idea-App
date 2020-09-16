@@ -21,9 +21,12 @@
         </select>
     </div>
     <div class="form-check">
-        <input type="checkbox" name="allowcomments" class="form-check-input"
-          id="allowcomments" {{#if idea.allowComments}} checked="true" {{/if}}>
-        <label for="allowcomments" class="form-check-label">AllowComments</label>
+        <input type="checkbox" name="allowComments" class="form-check-input"
+          id="allowComments" 
+          {{#if idea.allowComments}} 
+          checked="true" 
+          {{/if}}>
+        <label for="allowComments" class="form-check-label">AllowComments</label>
 
     </div>
     <button class="btn btn-primary mt-3" type="submit">Update Idea</button>
