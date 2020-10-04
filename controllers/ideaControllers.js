@@ -124,6 +124,7 @@ const getIdeaController = async (req, res, next) => {
 //update idea 
 const updateIdeaController = async (req, res, next) => {
     const id = req.params.id
+    console.log(req.body)
     req.body.allowComments = req.allowComments;
     req.body.tags = req.body.tags.split(',');
     const pickedValue = _.pick(req.body, [

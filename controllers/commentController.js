@@ -1,5 +1,8 @@
 const Idea = require('../models/idea')
 const {generateIdeaDoc,generateCommentDoc} = require('../helpers/docGenate')
+const _ = require('lodash');
+const { groupBy } = require('lodash');
+
 const addCommentController = async(req,res)=>{
     const id = req.params.id
     //get idea 
@@ -58,33 +61,34 @@ const editCommentController = async(req,res)=>{
     const id = req.params.id;
     const comment_id = req.params.comment_id
     const idea = await Idea.findById(id);
-  
- 
+    let contextComments;
     if(idea.comments){
-        contextComments = idea.comments.map(
+        const ideaDocument  = generateIdeaDoc(idea._id,idea.title)
+         contextComments = idea.comments.map(
            comment =>generateCommentDoc(
-               comment._id,comment.title,comment.text))
-    
+               comment._id,comment.title,comment.text))           
+             
         res.render('comments/edit',{
             title:'Edit Comment',
-            idea:contextComments,
+            idea:ideaDocument,  
+            comment: contextComments
         })
+    
     }else{
         res.status(404).render('pages/NotFound',{
             title:'Not Found'
         });
     }
-    console.log(contextComments)
-    console.log(comment_id)
+    
+
 }
 
 
-const updateCommentController = (req,res)=>{
+const updateCommentController = async(req,res)=>{
     const id = req.params.id;
     const comment_id = req.params.id;
     console.log(req.body)
-
-
+  
 }
 
 module.exports ={
