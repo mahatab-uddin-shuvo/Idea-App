@@ -23,14 +23,20 @@
             </option>
         </select>
     </div>
+     <div class="form-group">
+        <label for="tags">Tags</label>
+        <input type="text" name="tags" class="form-control" 
+        id="tags" data-role="tagsinput">
+    </div>
     <div class="form-check">
         <input type="checkbox" name="allowComments" class="form-check-input" id="allowComments"
             {{#if idea.allowComments}} 
             checked="true"
             {{/if}}/>
         <label for="allowComments" class="form-check-label">AllowComments</label>
-
     </div>
-    <button class="btn btn-primary mt-3" type="submit">Add idea</button>
+
+    <button disabled style="display: none;" class="btn btn-primary mt-3" type="submit">Add idea</button>
+    <button  class="btn btn-primary mt-3" type="submit">Add idea</button>
 
 </form>

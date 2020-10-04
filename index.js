@@ -1,20 +1,47 @@
 const express = require('express');
+require('express-async-errors')
+require('dotenv').config()
 const exphbs = require('express-handlebars');
 const methodOverride = require('method-override');
-const _ = require('lodash');
 const path = require('path');
-const mongoose = require('mongoose');
-const { check, validationResult } = require('express-validator');
+const passport = require('passport')
+const session = require('express-session')
+const MongoStore = require('connect-mongo')(session);
+const flash = require('connect-flash')
 
-const { compareValues, truncateContent } = require('./helpers/hbs')
-const Idea = require('./models/ideas');
+//configuring passport 
+require('./config/passport').localStrategy(passport)
+require('./config/passport').googleStrategy(passport)
+
+
+const {
+    compareValues, 
+    truncateContent,
+    comparePath 
+    } = require('./helpers/hbs')
 
 //database Connection
-const connectDB = require('./config/db')
-//doc helper
-const genarateIdeaDoc = require('./helpers/docGenate')
+const {connectDB,url} = require('./config/db')
 
+//Import Route config 
+const ideaRoutes =  require('./routes/idea')
+const pageRoutes =  require('./routes/page')
+const authRoutes =  require('./routes/auth')
+const commentRoutes =  require('./routes/comment')
+
+
+//Import NotFound Controller
+const {notfoundPageController} = require('./controllers/pageController')
+
+//import middleware
+const errorMiddleware =  require('./middleware/errorMiddleware')
+
+const store = new MongoStore({
+    url
+})
+//connecting
 connectDB()
+
 const app = express();
 
 
@@ -22,304 +49,74 @@ app.engine('.hbs', exphbs({
     extname: '.hbs',
     helpers: {
         compareValues,
-        truncateContent
+        truncateContent,
+        comparePath
     }
 }));
 app.set('view engine', '.hbs');
 
 //middleware
+app.use(session({
+    secret:process.env.SESSION_SECRET,
+    store,
+    resave:false,
+    saveUninitialized:false,
+    cookie:{
+        maxAge : 2 * 60 * 100 * 1000,
+        httpOnly: true,
+        sameSite:'lax'
+    }
+}))
+
+app.use(flash())
+
+//passport middleware
+app.use(passport.initialize())
+app.use(passport.session())
+
 app.use(methodOverride('_method'))
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')))
 
+// const isAuth = (req,res,next)=>{
+//    console.log(req.cookies.isLoggedIn);
+//    if(req.cookies.isLoggedIn === 'true'){
+//     next()
+//     }
+//    else{
+//        res.render('auth/login',{
+//            title:'Login Idea'
+//        })
+//    }
 
+// if(req.session.isLoggedIn === 'true'){
+//     next()
+// }else{
+//     res.redirect('/auth/login')
+// }
+// }
 
-
-//home page 
-app.get('/', (req, res) => {
-    res.render('index', {
-        text: 'Hello from node.js',
-        title: 'Home page'
-    });
-});
-
-//about
-app.get('/about', (req, res) => {
-    res.render('about', {
-        text: 'know About us',
-        title: 'about us'
-    })
-});
-//contact
-app.get('/contact', (req, res) => {
-    res.render('contact', {
-        text: 'Contact us',
-        title: 'Contact us'
-    })
-});
-
-//get all ideas
-app.get('/ideas', async (req, res) => {
-    try {
-        //getting all idea
-        const ideas = await Idea.find();
-        //avoiding handlebars errors related to child and parent referecting
-        const contexts = {
-            ideasDocuments: ideas.map(idea =>
-                genarateIdeaDoc(
-                    idea._id,
-                    idea.title,
-                    idea.description,
-                    idea.allowComments,
-                    idea.status
-                ))
-        };
-        res.render('ideas/index', {
-            ideas: contexts.ideasDocuments,
-            title: 'All Ideas',
-            path: '/ideas'
-
-        });
-    } catch (err) {
-        res.send(err.message)
-        res.status(500).render('error');
-    }
-
-});
-
-//show form to add idea
-
-app.get('/ideas/new', (req, res) => {
-    res.render('ideas/new', {
-        title: 'Add Idea'
-    })
-});
-
-//show edit idea form
-
-app.get('/ideas/:id/edit', async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.render('NotFound')
-    }
-    try {
-        const idea = await Idea.findById(id)
-        
-        if (idea) {
-            const ideasDocument = genarateIdeaDoc(
-                idea._id,
-                idea.title,
-                idea.description,
-                idea.allowComments,
-                idea.status
-            )
-            res.render('ideas/edit', {
-                title: 'Edit title',
-                idea: ideasDocument
-            })
-        } else {
-            res.status(404).render('NotFound')
-        }
-    } catch (err) {
-        console.log(err)
-        res.status(500).render('error')
-    }
-
+app.use((req,res,next)=>{
+    res.locals.user = req.user || null 
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error = req.flash('error')
+    res.locals.error_msg = req.flash('error_msg')
+    next()
 })
+//route middleware
+app.use('/',pageRoutes)
+app.use('/auth',authRoutes)
+app.use('/ideas',ideaRoutes)
+app.use('/ideas/:id/comments',commentRoutes)
 
-//add idea
-app.post('/ideas', [
-    check('title')
-        .notEmpty()
-        .withMessage('title must be required')
-        .isLength({ min: 2, max: 50 })
-        .withMessage('title must be 2 to 50 character long')
-        .trim(),
-
-    check('description', 'Description must be less then 10000 character')
-        .isLength({ max: 1000 }),
-
-    check('status')
-        .notEmpty()
-        .withMessage('status is required')
-        .isIn(['public', 'private'])
-        .withMessage('Status must be public or private')
-],  async (req, res) => {
-        const errors = validationResult(req)
-        //console.log(errors.array())
-        const allowComments = req.body.allowComments ? true : false
-
-        if (!errors.isEmpty()) {
-            return res.render('ideas/new', {
-                title: 'Add Idea',
-                errMsg: errors.array()[0].msg,
-                idea: {
-                    title: req.body.title,
-                    description: req.body.description,
-                    allowComments,
-                    status: req.body.status
-                }
-            })
-
-        }
-
-        //1    
-        const idea = new Idea({
-            ...req.body,
-            allowComments
-        })
-        try {
-            await idea.save()
-
-            // 2.    Idea.create({
-            //         ...req.body,
-            //         allowComments
-            //     })
-
-            //redirect
-            res.redirect('/ideas');
-        } catch (err) {
-            console.log(err)
-            for (field in err.errors) {
-                console.log(err.errors[field].path,
-                    err.errors[field].message)
-            }
-            res.status(500).render('error');
-        }
-
-    })
-
-//show single route
-app.get('/ideas/:id', async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.render('NotFound')
-    }
-    try {
-        //get the idea
-        const idea = await Idea.findById(id);
-       
-
-        if (idea) {
-            const ideasDocument = genarateIdeaDoc(
-                idea._id, 
-                idea.title, 
-                idea.description,
-                idea.allowComments,
-                idea.status
-                )
-            res.render('ideas/show', {
-                title: "Single Idea",
-                idea: ideasDocument
-            });
-        } else {
-            res.status(404).render('NotFound')
-        }
-    } catch (err) {
-        console.log(err)
-        res.status(500).render('error')
-    }
-
-})
-
-//update idea
-app.put('/ideas/:id', [
-    check('title')
-        .notEmpty()
-        .withMessage('title must be required')
-        .isLength({ min: 2, max: 50 })
-        .withMessage('title must be 2 to 50 character long')
-        .trim(),
-
-    check('description', 'Description must be less then 10000 character')
-        .isLength({ max: 1000 }),
-
-    check('status')
-        .notEmpty()
-        .withMessage('status is required')
-        .isIn(['public', 'private'])
-        .withMessage('Status must be public or private')
-], async (req, res) => {
-    const id = req.params.id;
-    const errors = validationResult(req)
-
-    //1.   // const allowComments = req.body.allowComments ? true : false      
-    // console.log(allowComments)
-
-    // req.body.allowComments=allowComments
-    //2. 
-    if (req.body.allowComments === 'on') {
-        req.body.allowComments = true
-    } else {
-        req.body.allowComments = false
-    }
-    const pickedValue = _.pick(req.body, [
-        'title',
-        'description',
-        'allowComments',
-        'status'
-    ]);
-    console.log(pickedValue)
-
-    if (!errors.isEmpty()) {
-        return res.render('ideas/edit', {
-            title: 'Edit Idea',
-            errMsg: errors.array()[0].msg,
-            idea: {
-                id,
-                title: req.body.title,
-                description: req.body.description,
-                allowComments: req.body.allowComments,
-                status: req.body.status
-            }
-
-        })
-    }
-    try {
-        const idea = await Idea.findByIdAndUpdate(id, pickedValue);
-        if (idea) {
-            res.redirect(`/ideas/${id}`);
-        } else {
-            res.status(404).render('NotFound')
-
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(500).render('error')
-    }
+//notFound
+app.use('*',notfoundPageController)
 
 
-});
-
-//delete idea
-app.delete('/ideas/:id', async (req, res) => {
-    const id = req.params.id;
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.render('NotFound')
-    }
-    try {
-        
-        const idea = await Idea.findByIdAndDelete(id)
-        if (idea) {
-            res.redirect('/ideas');
-
-        } else {
-            res.status(404).render('NotFound')
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(500).render('error')
-    }
-
-
-})
-
-app.get('*', (req, res) => {
-    res.status(404).render('NotFound');
-});
-
+//error handaling middleware
+app.use(errorMiddleware)
 
 // create server and listening to port
-app.listen('5000', () => {
-    console.log("Server is Listeninng on port 5000");
+app.listen('5050', () => {
+    console.log("Server is Listeninng on port 5050");
 });

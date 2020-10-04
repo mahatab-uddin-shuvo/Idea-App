@@ -10,7 +10,13 @@ const truncateContent = (content,number) => {
     }
 
 }
+
+const comparePath = (lPath, rPath) => {
+    return lPath === rPath && 'active';
+};
+
 module.exports = {
     compareValues,
-    truncateContent
+    truncateContent,
+    comparePath
 }

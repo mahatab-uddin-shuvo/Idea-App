@@ -1,11 +1,35 @@
 <div class="card">
   <div class="card-body">
-      <h2 class="card-title">{{idea.title}}</h2>
-      <div class="card-text">{{{idea.description}}}</div>
-      <a href="/ideas/{{idea.id}}/edit" class="btn btn-primary float-left mr-2 mt-2">Edit</a>
-      <form action="/ideas/{{idea.id}}?_method=DELETE" method="POST">
-        <button class="btn btn-danger mt-2">Delete</button>
+    <h2 class="card-title">{{idea.title}}</h2>
+    <div class="card-text">{{{idea.description}}}</div>
+    {{#if user}}
+    <a href="/ideas/{{idea.id}}/edit" class="btn btn-primary float-left mr-2 mt-2">Edit</a>
+    <form action="/ideas/{{idea.id}}?_method=DELETE" method="POST">
+      <button class="btn btn-danger mt-2">Delete</button>
+    </form>
+    {{else}}
+    {{/if}}
+    <div class="mt-2">
+      <em>Tags:</em>
+      {{#each idea.tags}}
+      <span class="badge badge-primary">{{this}}</span>
+      {{/each}}
+    </div>
+  </div>
+</div>
+<div class="card mt-2">
+  <a href="/ideas/{{idea.id}}/comments/new" class="btn btn-info">Add a Comment</a>
+  <div class="card-body">
+    {{#each idea.comments}}
+      <h4 class="card-title">{{title}}</h4>
+      <p class="card-text">{{text}}</p>
+      <a href="/ideas/{{../idea.id}}/comments/{{id}}/edit" class="btn btn-primary float-left mr-2 btn-sm">Edit</a>
+      <form action="/ideas/{{../idea.id}}/comments/{{id}}?_method=DELETE" method="POST">
+      <button class="btn btn-danger btn-sm">Delete</button>
       </form>
-
+      <hr>
+    {{else}}
+      <p class="card-text">No Comment to Show</p>
+    {{/each}}
   </div>
 </div>

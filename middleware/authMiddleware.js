@@ -1,0 +1,10 @@
+const isAuth = (req,res,next)=>{
+    if(req.isAuthenticated()){
+        next()
+    }else{
+        req.flash('error_msg','Please Login to perform the action')
+        res.redirect('/auth/login')
+    }
+}
+
+module.exports = isAuth

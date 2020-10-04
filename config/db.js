@@ -1,13 +1,22 @@
 const mongoose = require('mongoose')
-module.exports = async function connectDB() {
+ 
+const url = process.env.LOCAL_DB
+const connectDB = async function() {
     try {
-        await mongoose.connect('mongodb://localhost:27017/ideas-app', {
+        await mongoose.connect(url, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            useFindAndModify: false
+            useFindAndModify: false,
+            useCreateIndex:true
         });
         console.log('Database Connected Successfully');
     } catch (err) {
         console.log(err)
     }
+}
+
+module.exports = {
+    url,
+    connectDB
+    
 }

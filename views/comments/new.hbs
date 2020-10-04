@@ -1,0 +1,15 @@
+<div class="card">
+    <h5 class="card-header">{{idea.title}}</h5>
+    <div class="card-body">
+        <form action="/ideas/{{idea.id}}/comments" method="POST">
+            <div class="form-group">
+                <input type="text" name="title" class="form-control" placeholder="Title of Your comment">
+            </div>
+            <div class="form-group">
+                <textarea name="text" class="form-control" placeholder="Write more"></textarea>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Add Comment">
+        </form>
+        <a href="/ideas/{{idea.id}}" class="btn btn-info mt-3">Back to Idea</a>
+    </div>
+</div>

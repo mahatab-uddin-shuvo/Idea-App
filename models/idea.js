@@ -1,4 +1,5 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const {commentSchema} = require('./comment')
 
 const ideaSchema = new mongoose.Schema({
     title : {
@@ -42,8 +43,27 @@ const ideaSchema = new mongoose.Schema({
             values:['public','private'],
             message: 'Please provide public or private in status'
         }
-    }
-    
+    },
+    // tags:{
+    //     type:[String],
+    //     required:true,
+    //     trim:true,
+    //     validate:{
+    //         validator(v){
+    //            return v[0].length > 0;
+    //         },
+    //         message:'Idea Must have One Tag'
+    //     }
+    // }
+    tags:[
+        {
+           type:String,
+           required:[true,'Idea must have One Tag']
+
+        }
+    ],
+
+    comments:[commentSchema]
 
 });
 

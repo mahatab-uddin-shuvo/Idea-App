@@ -1,0 +1,15 @@
+<div class="card">
+    <h5 class="card-header">{{idea.title}}</h5>
+    <div class="card-body">
+        <form action="/ideas/{{idea.id}}/comments/{{comment.id}}/edit" method="POST">
+            <div class="form-group">
+                <input type="text" name="title" class="form-control" placeholder="Title of Your comment"
+                value="{{comment.title}}">
+            </div>
+            <div class="form-group">
+                <textarea name="text" class="form-control" placeholder="Write more">{{comment.text}}</textarea>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Update">
+        </form>
+    </div>
+</div>
