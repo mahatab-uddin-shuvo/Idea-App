@@ -1,0 +1,35 @@
+{{#if isAdmin}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>Admin</Strong></h2>
+{{else}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>{{firstName}}</Strong></h2>
+{{/if}}
+
+<div class="row">
+    <div class="col-3">
+        {{>_dashboard-panel-left}}
+    </div>
+    <div class="col-9 p-4">
+        <ul class="list-unstyled mb-3 profile">
+            <li><em>Profile Picture:</em>Please Click edit Profile to 
+            Upload Profile Picture</li>
+            <li><em>FirstName:</em>{{firstName}}</li>
+            <li><em>LasttName:</em>{{user.lastName}}</li>
+            <li><em>Email:</em>{{user.email}}</li>
+            <li><em>Password:</em>
+                <i class="fas fa-star"></i> 
+                <i class="fa fa-star"></i> 
+                <i class="fa fa-star"></i> 
+                <i class="fas fa-star"></i> 
+                <i class="fas fa-star"></i> 
+            </li>
+        </ul>
+
+        <a href="/users/me/edit" class="btn btn-info float-left">
+        Edit Profile</a>
+        <form action="/users/me?_method=DELETE" method="POST">
+          <button class="btn btn-danger float-right">
+              Delete Account
+          </button>
+        </form>
+    </div>
+</div>

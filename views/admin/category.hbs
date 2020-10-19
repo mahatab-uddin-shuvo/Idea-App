@@ -1,0 +1,24 @@
+{{#if isAdmin}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>Admin</Strong></h2>
+{{else}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>{{firstName}}</Strong></h2>
+{{/if}}
+
+<div class="row">
+    <div class="col-3">
+        {{>_dashboard-panel-left}}
+    </div>
+    <div class="col-9">
+        <form action="/categories" method="POST" id="categoryForm">
+           <div class="form-group">
+               <label for="category">Category</label>
+               <input type="category" name="category" id="category"
+                class="form-control">
+           </div>
+           <input type="submit" class="btn btn-primary" value="Add Category">
+           <div class="categories mt-3" ></div>
+         </form>
+    </div>
+</div>
+
+

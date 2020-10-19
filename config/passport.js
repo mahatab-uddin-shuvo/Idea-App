@@ -11,7 +11,7 @@ const localStrategy = (passport) => {
             usernameField: 'email'
         },
         async (email, password, next) => {
-
+            let isMatch = false
             try {
                 //check user by email
                 const user = await User.findOne({
@@ -20,8 +20,11 @@ const localStrategy = (passport) => {
                 if (!user) {
                     return next(null, false, { message: 'invalid email or password' })
                 }
-                //check password and compare password
-                const isMatch = await bcrypt.compare(password, user.password)
+                if (user.password) {
+                    //check password and compare password
+                     isMatch = await bcrypt.compare(password, user.password)
+                }
+
 
                 //pssword is OK
                 if (isMatch) {

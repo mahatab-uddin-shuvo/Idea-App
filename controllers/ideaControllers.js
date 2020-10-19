@@ -4,42 +4,57 @@ const { check, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const _ = require('lodash');
 //doc helper
-const {generateIdeaDoc,generateCommentDoc} = require('../helpers/docGenate')
+const { generateIdeaDoc, generateCommentDoc, generateCategoryDoc } = require('../helpers/docGenate')
 
 //import Idea database
 const Idea = require('../models/idea')
+const { Comment } = require('../models/comment');
+const Category = require('../models/category');
+const { updateUserValidate } = require('../validators/userValidate');
 
- //get all ideas
- const getIdeasController = async (req, res, next) => {
+//get all ideas
+const getIdeasController = async (req, res, next) => {
 
+    console.log(req.user)
     //getting all idea
     const ideas = await Idea.find();
-    //avoiding handlebars errors related to child and parent referecting
-    const contexts = {
-        ideasDocuments: ideas.map(idea =>
-            generateIdeaDoc(
-                idea._id,
-                idea.title,
-                idea.description,
-                idea.allowComments,
-                idea.status,
-                idea.tags,
-                idea.comments
-            ))
-    };
+
+    //get all filtering  public ideas
+    const publicIdeas = ideas.filter(idea => idea.status === 'public')
+    
+    //creating public ideas context to avoid error
+    const ideasPublicContext = publicIdeas.map(publicIdea=>generateIdeaDoc(publicIdea))
+
+    //creating all ideas context to avoid error
+    const ideasContext = ideas.map(idea=>generateIdeaDoc(idea))
+
+    // get all categories 
+    const categories = await Category.find()
+      
+    //creating context to avoid hbs errors
+    const categoryContext = categories.map(category=>generateCategoryDoc(category))
+    
+
     res.render('ideas/index', {
-        ideas: contexts.ideasDocuments,
-        title: 'All Ideas', 
+        ideas: ideasPublicContext,
+        title: 'All Ideas',
+        categories:categoryContext,
+        ideasTags:ideasContext,
         path: '/ideas'
 
     });
 };
 
 //show form to add idea
-const addIdeaController =  (req, res, next) => {
+const addIdeaController = async (req, res, next) => {
+    const categories = await Category.find()
+    const contextCategory = categories.map
+        (category => generateCategoryDoc(category))
+    //console.log(contextCategory)
     res.render('ideas/new', {
         title: 'Add Idea',
-        path:'/ideas/new'
+        path: '/ideas/new',
+        categories: contextCategory
     })
 }
 
@@ -49,21 +64,42 @@ const editIdeaController = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.render('pages/NotFound')
     }
-    const idea = await Idea.findById(id)
+    //get all categories
+    const categories = await Category.find()
 
+    const idea = await Idea.findById(id)
+    
     if (idea) {
-        const ideasDocument = generateIdeaDoc(
-            idea._id,
-            idea.title,
-            idea.description,
-            idea.allowComments,
-            idea.status,
-            idea.tags,
-            idea.comments
-        )
+        const ideasDocument = generateIdeaDoc(idea)
+
+        const ideaCategories =[];
+        ideasDocument.categories.filter(({categoryName})=>{
+            categories.map(({category})=>{
+                if(category === categoryName){
+                    ideaCategories.push({
+                        category,
+                        categoryName
+                    })
+                }
+            })
+        })
+       
+        //modifying existing array of object()
+        categories.map((e,i)=>{
+            if(e.category !==(ideaCategories[i] ? ideaCategories[i].category : '')){
+                ideaCategories.push({
+                    category:e.category,
+                    categoryName:null
+                })
+            }
+        })
+     
+        const uniqArr = _.uniqBy(ideaCategories,'category')
+
         res.render('ideas/edit', {
             title: 'Edit title',
-            idea: ideasDocument
+            idea: ideasDocument,
+            ideaCategories:uniqArr
         })
     } else {
         res.status(404).render('pages/NotFound')
@@ -74,44 +110,65 @@ const editIdeaController = async (req, res, next) => {
 //add idea
 const postIdeaController = async (req, res, next) => {
     req.body.tags = req.body.tags.split(',')
+
     const idea = new Idea({
         ...req.body,
-        allowComments:req.allowComments
-    })
-  await idea.save()
-  console.log(idea);
-  req.flash('success_msg','Idea Added Successfully')
-  console.log('Saved')
+        allowComments: req.allowComments,
+        user: {
+            id: req.user._id,
+            firstName: req.user.firstName
+        },
+        categories: []
+    });
 
-  res.redirect('/ideas');
+
+    if (Array.isArray(req.body.categories)) {
+        //looping all categories and save each category in each idea
+        for (let index = 0; index < req.body.categories.length; index++) {
+            const categoryName = req.body.categories[index];
+            idea.categories.push({ categoryName });
+        }
+    }else{
+        const categoryName = req.body.categories;
+        idea.categories.push({ categoryName });
+    }
+
+
+    await idea.save()
+
+    req.flash('success_msg', 'Idea Added Successfully')
+    console.log('Saved')
+
+    res.redirect('/ideas');
 }
 
 //show single route 
 const getIdeaController = async (req, res, next) => {
     const id = req.params.id;
     let contextComments;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.render('pages/NotFound')
     }
     //get the idea
-    const idea = await Idea.findById(id);
+    const idea = await Idea.findById(id).populate('comments');
+
     //Generating Comment Contexts to hbs error
-    if(idea.comments){
+    if (idea.comments) {
         contextComments = idea.comments.map(
-           comment =>generateCommentDoc(
-               comment._id,comment.title,comment.text))
-    } 
+            comment => generateCommentDoc(comment)
+        )
+    }
 
     if (idea) {
-        const ideasDocument = generateIdeaDoc(
-            idea._id,
-            idea.title,
-            idea.description,
-            idea.allowComments, 
-            idea.status,
-            idea.tags,
-            contextComments
-        )
+        const ideasDocument = generateIdeaDoc(idea);
+
+        ideasDocument.categories = ideasDocument.categories.map
+            (category => generateCategoryDoc(category)
+            )
+        ideasDocument.comments = contextComments
+
+
         res.render('ideas/show', {
             title: ideasDocument.title,
             idea: ideasDocument
@@ -127,20 +184,38 @@ const updateIdeaController = async (req, res, next) => {
     console.log(req.body)
     req.body.allowComments = req.allowComments;
     req.body.tags = req.body.tags.split(',');
+
+    const categories =[];
+
+    if (Array.isArray(req.body.categories)) {
+        //looping all categories and save each category in each idea
+        for (let index = 0; index < req.body.categories.length; index++) {
+            const categoryName = req.body.categories[index];
+            categories.push({ categoryName });
+        }
+    }else{
+        const categoryName = req.body.categories;
+        categories.push({ categoryName });
+    }
+
+    req.body.categories = categories;
+
     const pickedValue = _.pick(req.body, [
         'title',
         'description',
         'allowComments',
         'status',
-        'tags'
+        'tags',
+        'categories'
     ]);
     console.log("Updated data")
     console.log(pickedValue)
 
     const idea = await Idea.findByIdAndUpdate(id, pickedValue);
+
     if (idea) {
-        req.flash('success_msg','Idea Updated Successfully')
-        res.redirect(`/ideas/${id}`); 
+        req.flash('success_msg', 'Idea Updated Successfully')
+        res.redirect(`/ideas/${id}`);
     } else {
         res.status(404).render('pages/NotFound')
 
@@ -148,22 +223,91 @@ const updateIdeaController = async (req, res, next) => {
 }
 
 //delete idea
-const deleteIdeaController =  async (req, res, next) => {
+const deleteIdeaController = async (req, res, next) => {
     const id = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.render('pages/NotFound')
     }
-
     const idea = await Idea.findByIdAndDelete(id)
     console.log('Deleted Data')
     if (idea) {
-        req.flash('success_msg','Idea Deleted Successfully')
+        req.flash('success_msg', 'Idea Deleted Successfully')
         res.redirect('/ideas');
 
     } else {
         res.status(404).render('pages/NotFound')
     }
 }
+
+const postLikeController =async (req,res)=>{
+    const id = req.params.id
+    const userId = req.body.userId
+    
+    //get idea
+    const idea = await Idea.findById(id);
+    if(idea){
+        if(!idea.likes.includes(userId)){
+            idea.likes.push(userId);
+            await idea.save();
+            res.send({
+                success: true,
+                message: 'You liked the Idea'
+            })
+        }else{
+            //remove the likes from ideas array
+            const likes = idea.likes.filter(
+                like=>like.toString() !== userId.toString()
+            ) 
+            idea.likes = likes
+            await idea.save()
+            res.send({
+                success: true,
+                message: 'You like is removed from the idea'
+            })
+        }
+    }  res.send({
+        success: false,
+        message: 'You idea is not found to be liked'
+    })
+    
+}
+
+const getLikeCountController = async(req,res)=>{
+    const id = req.params.id;
+    const idea = await Idea.findById(id);
+
+    if(idea){
+        const likeCount = idea.likes.length
+        res.status(200).send({
+            success: true,
+            data:likeCount
+        })
+    }else{
+        res.send({
+            success: false,
+            message: 'You idea is not found to be counted'
+        })
+    }
+
+}
+const getCommentCountController = async(req,res)=>{
+    const id = req.params.id;
+    const idea = await Idea.findById(id).populate('comments');
+    if(idea){
+        const commentCount = idea.comments.length;
+        res.status(200).send({
+            success: true,
+            data:commentCount
+        })
+    }else{
+        res.send({
+            success: false,
+            message: 'You idea is not found to be comment counted'
+        })
+    }
+}
+
+
 
 module.exports = {
     getIdeasController,
@@ -172,6 +316,9 @@ module.exports = {
     postIdeaController,
     getIdeaController,
     updateIdeaController,
-    deleteIdeaController
+    deleteIdeaController,
+    postLikeController,
+    getLikeCountController,
+    getCommentCountController
 
 }

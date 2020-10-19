@@ -2,6 +2,9 @@ const { truncate, isLength } = require('lodash')
 const mongoose =  require('mongoose')
 const bcrypt = require('bcryptjs')
 
+//model 
+const Idea = require('./idea')
+
 const userSchema = new mongoose.Schema({
     googleID:{
         type:String
@@ -44,7 +47,21 @@ const userSchema = new mongoose.Schema({
                 if(isMatch) return false
             }
         }
+    },
+    role:{
+        type:Number,
+        default:0
     }
+},{
+    toObject:{
+        virtuals:true
+    }
+})
+
+userSchema.virtual('ideas',{
+    ref:'Idea',
+    localField:'_id',
+    foreignField: 'user.id'
 })
 
 userSchema.pre('save',async function(next) {
@@ -57,6 +74,19 @@ userSchema.pre('save',async function(next) {
   }
   
 })
+
+userSchema.pre('remove',async function(next){
+    const user = this;
+    const id = user._id;
+    
+    await Idea.deleteMany({
+        'user.id' : id
+    })
+    console.log('Success all idea Delete by account')
+    next()
+})
+
+
 const User =  mongoose.model('User', userSchema) ;
 
 module.exports = User

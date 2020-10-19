@@ -1,9 +1,31 @@
-{{#each ideas}}
-<div class="card">
-  <div class="card-body">
-      <h2 class="card-title">{{title}}</h2>
-      <div class="card-text">{{{truncateContent description 200}}}</div>
-      <a href="/ideas/{{id}}" class="btn btn-primary mt-2">Read more </a>
+<div class="row">
+  <div class="col-9">
+    {{#if userRef}}
+    <h2>All Ideas By<em> {{firstName}}</em></h2>
+    {{>_ideas-index}}
+
+    {{else if catRef}}
+    <h2>All Ideas By<em> {{catName}}</em></h2>
+    {{>_ideas-index}}
+
+    {{else}}
+    {{>_ideas-index}}
+
+    {{/if}}
+  </div>
+  <div class="col-3">
+    <h3>Categories</h3>
+    <hr>
+    {{#each categories}}
+    <a href="/categories/{{category}}/ideas"><span class="badge badge-primary">{{category}}</span></a>
+    {{/each}}
+
+    <h3>Tags</h3>
+    <hr>
+    {{#each ideasTags}}
+    {{#each tags}}
+    <span class="badge badge-primary">{{this}}</span>
+    {{/each}}
+    {{/each}}
   </div>
 </div>
-{{/each}}

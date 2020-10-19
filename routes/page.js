@@ -8,8 +8,11 @@ const {
     notfoundPageController
       } = require('../controllers/pageController')
 
+//middleware
+const {ensureGuest}= require('../middleware/authMiddleware')
+
 //home page 
-router.get('/',homePageController );
+router.get('/',ensureGuest,homePageController );
 
 //about
 router.get('/about', aboutPageController);

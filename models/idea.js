@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {commentSchema} = require('./comment')
+const {Comment} =  require('./comment')
 
 const ideaSchema = new mongoose.Schema({
     title : {
@@ -44,17 +44,19 @@ const ideaSchema = new mongoose.Schema({
             message: 'Please provide public or private in status'
         }
     },
-    // tags:{
-    //     type:[String],
-    //     required:true,
-    //     trim:true,
-    //     validate:{
-    //         validator(v){
-    //            return v[0].length > 0;
-    //         },
-    //         message:'Idea Must have One Tag'
-    //     }
-    // }
+
+    categories:[
+       {
+           categoryName:String
+       }
+    ],
+    
+    likes:[
+        {
+            type:mongoose.Types.ObjectId
+        }
+    ],
+ 
     tags:[
         {
            type:String,
@@ -63,9 +65,27 @@ const ideaSchema = new mongoose.Schema({
         }
     ],
 
-    comments:[commentSchema]
+    user:{
+        id:{
+          type:mongoose.Schema.Types.ObjectId,
+          ref:'User'
+        },
+        firstName:String
+    }  
 
+},{
+    toObject:{
+        virtuals:true
+    },
+    timestamps:true
 });
+
+ideaSchema.virtual('comments',{
+    ref:'Comment',
+    localField:'_id', //idea schemar local field
+    foreignField: 'idea' //comments er under jei idea field
+})
+
 
 const Idea = mongoose.model('Idea',ideaSchema);
 

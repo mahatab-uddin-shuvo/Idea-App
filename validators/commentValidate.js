@@ -7,7 +7,7 @@ const addCommentValidate = async(req,res,next)=>{
     const id = req.params.id
     const idea = await Idea.findById(id);
     if(idea){
-        const ideaDocuments = generateIdeaDoc(idea._id,idea.title);
+        const ideaDocuments = generateIdeaDoc(idea);
         const errors = validationResult(req);
         if(!errors.isEmpty()){
             res.render('comments/new',{

@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
+    idea:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Idea'
+    },
     title:{
         type:String,
         required:true,
@@ -10,8 +14,19 @@ const commentSchema = new mongoose.Schema({
     text:{
         type:String,
         maxlength:1000
+    },
+    user:{
+        id:{
+          type:mongoose.Schema.Types.ObjectId,
+          ref:'User'
+        },
+        firstName:String
     }    
+},{
+    timestamps:true
 })
+
+//child to parent referencing
 
 const Comment = mongoose.model('Comment',commentSchema);
 

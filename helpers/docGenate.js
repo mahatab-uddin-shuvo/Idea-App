@@ -1,24 +1,62 @@
-const  generateIdeaDoc = (id, title, description, allowComments, status,tags,comments)=>{
+const  generateIdeaDoc = function generateIdeaDoc ({
+    _id, 
+    title, 
+    description, 
+    allowComments, 
+    status,
+    tags,
+    comments,
+    user,
+    createdAt,
+    updatedAt,
+    categories
+}) {
     return {
-        id,
+        _id,
         title,
         description,
         allowComments,
         status,
         tags,
-        comments
+        comments,
+        user,
+        createdAt,
+        updatedAt,
+        categories
     }
 }
 
-const generateCommentDoc = (id,title,text)=>{
+const generateCommentDoc = ({_id,title,text,user,createdAt,updatedAt})=>{
     return{
-        id,
+        _id,
         title,
-        text
+        text,
+        user,
+        createdAt,
+        updatedAt
+    }
+}
+
+const generateUserDoc = ({ _id, firesName ,lastName ,email})=>{
+    return{
+        _id,
+        firesName ,
+        lastName ,
+        email
+    };
+};
+
+const generateCategoryDoc=({_id,category,categoryName})=>{
+    return{
+        _id,
+        category,
+        categoryName
     }
 }
 
 module.exports = {
     generateIdeaDoc,
-    generateCommentDoc
+    generateCommentDoc,
+    generateUserDoc,
+    generateCategoryDoc
 }

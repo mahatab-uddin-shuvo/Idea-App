@@ -8,41 +8,62 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ml-auto">
         {{#if user}}
-        <li class="nav-item {{comparePath '/ideas' path}}">
+
+        <li class="nav-item {{compareValues '/ideas' path 'path'}}">
           <a class="nav-link" href="/ideas">Public Ideas</a>
         </li>
-        <li class="nav-item {{comparePath '/ideas/new' path}}">
-          <a class="nav-link" href="/ideas/new">Add Idea</a>
-        </li>
-        <li class="nav-item {{comparePath '/auth/logout' path}}">
-          <a class="nav-link" href="/auth/logout">LogOut</a>
-        </li>
-        <li class="nav-item {{comparePath '/about' path}}">
+
+         <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="text-transform:uppercase">
+          {{firstName}}
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="/users/me/ideas">Dashboard</a>
+          <a class="dropdown-item" href="/ideas/new">Add Idea</a>
+          <a class="dropdown-item" href="/users/me">Profile</a>
+          <a class="dropdown-item" href="/auth/logout">logout</a>
+        </div>
+      </li>
+
+       <li class="nav-item {{compareValues '/about' path 'path'}}">
           <a class="nav-link" href="/about">About</a>
         </li>
-        <li class="nav-item {{comparePath '/contact' path}}">
+        <li class="nav-item {{compareValues '/contact' path 'path'}}">
           <a class="nav-link" href="/contact">Contact us</a>
         </li>
-        {{else}}
-        <li class="nav-item {{comparePath '/ideas' path}}">
+
+        {{!-- <li class="nav-item {{compareValues '/ideas' path 'path'}}">
           <a class="nav-link" href="/ideas">Public Ideas</a>
         </li>
-        <li class="nav-item {{comparePath '/auth/register' path}}">
-          <a class="nav-link" href="/auth/register">Register</a>
+        <li class="nav-item {{compareValues '/ideas/new' path 'path'}}">
+          <a class="nav-link" href="/ideas/new">Add Idea</a>
         </li>
-        <li class="nav-item {{comparePath '/auth/login' path}}">
-          <a class="nav-link" href="/auth/login">Login</a>
+        <li class="nav-item {{compareValues '/auth/logout' path 'path'}}">
+          <a class="nav-link" href="/auth/logout">LogOut</a>
         </li>
-        <li class="nav-item {{comparePath '/about' path}}">
+        <li class="nav-item {{compareValues '/about' path 'path'}}">
           <a class="nav-link" href="/about">About</a>
         </li>
-        <li class="nav-item {{comparePath '/contact' path}}">
+        <li class="nav-item {{compareValues '/contact' path 'path'}}">
+          <a class="nav-link" href="/contact">Contact us</a>
+        </li> --}}
+        {{else}}
+        <li class="nav-item {{compareValues '/ideas' path 'path'}}">
+          <a class="nav-link" href="/ideas">Public Ideas</a>
+        </li>
+        <li class="nav-item {{compareValues '/auth/register' path 'path'}}">
+          <a class="nav-link" href="/auth/register">Register</a>
+        </li>
+        <li class="nav-item {{compareValues '/auth/login' path 'path'}}">
+          <a class="nav-link" href="/auth/login">Login</a>
+        </li>
+        <li class="nav-item {{compareValues '/about' path 'path'}}">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+        <li class="nav-item {{compareValues '/contact' path 'path'}}">
           <a class="nav-link" href="/contact">Contact us</a>
         </li>
         {{/if}}
-
-
-
       </ul>
     </div>
   </div>

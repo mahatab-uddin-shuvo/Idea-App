@@ -1,5 +1,21 @@
-const compareValues = (value1,value2)=>{
-    return value1 === value2 && 'selected';
+const {format} = require('date-fns')
+
+const compareValues = (value1,value2,value3)=>{
+    switch(value3){
+        case 'select':
+            return value1 === value2 && 'selected';
+            break;
+
+        case 'path' :
+            return value1 === value2 && 'active';
+            break;
+
+        case 'btn':  
+            return value1.equals(value2) ? 'block' : 'none';
+            break;
+
+        default:
+    }   
 }
 
 const truncateContent = (content,number) => {
@@ -11,12 +27,13 @@ const truncateContent = (content,number) => {
 
 }
 
-const comparePath = (lPath, rPath) => {
-    return lPath === rPath && 'active';
-};
+
+const formatDate = (date,toFormat)=>{
+return format(date , toFormat);
+}
 
 module.exports = {
     compareValues,
     truncateContent,
-    comparePath
+    formatDate
 }

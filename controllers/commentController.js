@@ -1,14 +1,17 @@
+//model
 const Idea = require('../models/idea')
+const {Comment} = require('../models/comment')
+//helper
 const {generateIdeaDoc,generateCommentDoc} = require('../helpers/docGenate')
 const _ = require('lodash');
-const { groupBy } = require('lodash');
 
 const addCommentController = async(req,res)=>{
+    console.log(req.user)
     const id = req.params.id
     //get idea 
     const idea = await Idea.findById(id)
     if(idea){
-        const ideaDocument  = generateIdeaDoc(idea._id,idea.title)
+        const ideaDocument  = generateIdeaDoc(idea)
         res.render('comments/new',{
             title:'Add a Comment',
             idea:ideaDocument
@@ -26,11 +29,18 @@ const postCommentController =async(req,res)=>{
     ///get idea
     const idea = await Idea.findById(id);
     if(idea){  
-       //adding comment to idea
-       idea.comments.push(req.body);
-       //saving data
-       await idea.save()
+       const comment = new Comment({
+           ...req.body,
+           idea: idea.id,
+           user:{
+               id:req.user._id,
+               firstName:req.user.firstName
+           }
+       });
+       await comment.save()
+       req.flash('success_msg','Comment Added Successfully')
        res.redirect(`/ideas/${id}`)
+
     }else{
         res.status(404).render('pages/NotFound',{
             title:'Not Found'
@@ -45,11 +55,10 @@ const deleteCommentController = async(req,res)=>{
     ///get idea
     const idea = await Idea.findById(id);
     if(idea){  
-        const comments = idea.comments.filter(comment =>comment._id.toString()!==comment_id)
-        idea.comments = comments
-       //saving data
-       await idea.save()
+        await Comment.findByIdAndDelete(comment_id)
+        req.flash('success_msg','Comment Delete Successfully')
        res.redirect(`/ideas/${id}`)
+
     }else{
         res.status(404).render('pages/NotFound',{
             title:'Not Found'
@@ -61,19 +70,19 @@ const editCommentController = async(req,res)=>{
     const id = req.params.id;
     const comment_id = req.params.comment_id
     const idea = await Idea.findById(id);
+    const comment = await Comment.findById(comment_id)
+
     let contextComments;
-    if(idea.comments){
-        const ideaDocument  = generateIdeaDoc(idea._id,idea.title)
-         contextComments = idea.comments.map(
-           comment =>generateCommentDoc(
-               comment._id,comment.title,comment.text))           
-             
+    if(comment){
+        const ideaDocument  = generateIdeaDoc(idea)
+         contextComments = generateCommentDoc(comment)   
+         console.log(contextComments)    
         res.render('comments/edit',{
             title:'Edit Comment',
-            idea:ideaDocument,  
+            idea:ideaDocument,
             comment: contextComments
         })
-    
+      
     }else{
         res.status(404).render('pages/NotFound',{
             title:'Not Found'
@@ -86,9 +95,21 @@ const editCommentController = async(req,res)=>{
 
 const updateCommentController = async(req,res)=>{
     const id = req.params.id;
-    const comment_id = req.params.id;
-    console.log(req.body)
-  
+    const comment_id = req.params.comment_id;
+    const pickedValue = _.pick(req.body, [
+        'title',
+        'text'
+    ]);
+
+  console.log(pickedValue)
+  const comment = await Comment.findByIdAndUpdate(comment_id, pickedValue);
+  if (comment) {
+      req.flash('success_msg','Comment Updated Successfully')
+      res.redirect(`/ideas/${id}`); 
+  } else {
+      res.status(404).render('pages/NotFound')
+
+  }
 }
 
 module.exports ={

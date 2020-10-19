@@ -1,4 +1,6 @@
+const _ = require('lodash')
 const User = require('../models/user')
+
 
 const getRegisterController = (req,res) =>{
      res.render('auth/register',{
@@ -8,8 +10,14 @@ const getRegisterController = (req,res) =>{
 }
 
 const postRegisterController = async(req,res)=>{
-    const user = new User (req.body)
-
+ 
+    const pickValue =_.pick(req.body,[
+        'firstName',
+        'lastName',
+        'email',
+        'password'
+    ]);  
+    const user = new User(pickValue)
     await user.save()
     req.flash('success_msg','Registration Successfully')
     res.redirect('/auth/login')

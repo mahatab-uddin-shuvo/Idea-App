@@ -1,0 +1,24 @@
+<div class="list-group">
+
+  <a href="/users/me/ideas" class="list-group-item list-group-item-action 
+  {{compareValues '/users/me/ideas' path 'path'}}">
+    All Ideas
+  </a>
+
+  <a href="/users/me" class="list-group-item list-group-item-action
+  {{compareValues '/users/me' path 'path'}}">
+    Profile</a>
+ 
+  {{#if isAdmin}}
+  <a href="/categories/new" class="list-group-item list-group-item-action
+  {{compareValues '/categories' path 'path'}}">
+    Categories</a>
+  {{/if}}
+
+  <a href="/auth/logout" class="list-group-item list-group-item-action">
+    Logout</a>
+
+
+
+
+</div>

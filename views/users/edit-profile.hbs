@@ -1,0 +1,35 @@
+{{#if isAdmin}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>Admin</Strong></h2>
+{{else}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>{{firstName}}</Strong></h2>
+{{/if}}
+
+<div class="row">
+    <div class="col-3">
+        {{>_dashboard-panel-left}}
+    </div>
+    <div class="col-9 p-4">
+        <h3 class="mb-3">Edit Profile</h3>
+        <form action="/users/me?_method=PUT" method="POST">
+             <div class="form-group ">
+                    <label for="firstName">FirstName</label>
+                    <input type="text" name="firstName" id="firstName" class="form-control"
+                    value="{{firstName}}" 
+                    >
+                </div>
+                <div class="form-group ">
+                    <label for="lastName">LastName</label>
+                    <input type="text" name="lastName" id="lastName" class="form-control"
+                     value ="{{userInput.lastName}}"
+                    >
+                </div>
+            
+            <div class="form-group">
+                <label for="profile">Profile Picture</label>
+                <input type="file" name="profile" id="profile" class="form-control"
+                >
+           </div>
+
+           <input type="submit" class="btn btn-primary" value="Update Profile">
+        </form>
+    </div>

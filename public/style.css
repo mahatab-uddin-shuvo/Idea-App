@@ -60,3 +60,9 @@
 .label-info{
   background-color: #5bc0de;
 }  
+.profile li {
+  margin-bottom: 2em;
+}
+.profile li em {
+  margin-right: 2em;
+}

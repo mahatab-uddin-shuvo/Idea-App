@@ -73,7 +73,29 @@ const loginValidators = () =>{
     ]
 }
 
+
+const updateUserValidators = () =>{
+    return[
+        check('firstName')
+        .trim()
+        .notEmpty()
+        .withMessage('FirstName Must be required')
+        .isLength({max:100})
+        .withMessage('FirstName must be less then 100 character'),
+
+        check('lastName')
+        .trim()
+        .notEmpty()
+        .withMessage('LastName Must be required')
+        .isLength({max:100})
+        .withMessage('lastName must be less then 100 character')
+    ]
+}
+
+
+
 module.exports = {
     registerValidators,
-    loginValidators
+    loginValidators,
+    updateUserValidators
 }

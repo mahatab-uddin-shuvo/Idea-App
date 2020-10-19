@@ -1,4 +1,6 @@
 const  {validationResult} = require('express-validator')
+const {generateUserDoc} = require('../helpers/docGenate');
+const User = require('../models/user')
 
 const registerValidate = (req,res,next) =>{
    const errors = validationResult(req)
@@ -38,7 +40,30 @@ const loginValidate = (req,res,next) =>{
     }
  }
 
+
+ 
+ const updateUserValidate = async(req,res,next)=>{
+     const user = await User.findById(req.user._id)
+         const userDoc = generateUserDoc(user);
+         const errors = validationResult(req);
+         if(!errors.isEmpty()){
+             res.render('users/edit-profile',{
+                 title:`Edit Profile of ${user.firstName}`,
+                 errMsg:errors.array()[0].msg,
+                 path:'/users/me',
+                 userInput:{
+                     firstName:req.body.firstName,
+                     lastName:req.body.lastName
+                 }
+             })
+         }else{
+             next();
+         }
+   
+ }
+
 module.exports = {
     registerValidate,
-    loginValidate
+    loginValidate,
+    updateUserValidate
 }

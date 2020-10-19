@@ -1,0 +1,40 @@
+{{#if isAdmin}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>Admin</Strong></h2>
+{{else}}
+<h2 class="display-4 text-center mb-4">Welcome <Strong>{{firstName}}</Strong></h2>
+{{/if}}
+
+<div class="row">
+    <div class="col-3">
+        {{>_dashboard-panel-left}}
+    </div>
+    <div class="col-9 p-4">
+       <table class="table table-striped">
+           <thead>
+               <tr>
+                   <th scope="col">title</th>
+                   <th scope="col">Date</th>
+                   <th scope="col">status</th>
+                   <th scope="col">Edit</th>
+                   <th scope="col">Delete</th>
+               </tr>
+           </thead>
+           <tbody>
+               {{#each ideas}}
+               <tr>
+                   <td><a href="/ideas/{{id}}">{{title}}</a></td>
+                   <td>{{formatDate updatedAt 'dd/MM/yyy'}}</td>
+                   <td>{{status}}</td>
+                   <td><a href="/ideas/{{_id}}/edit">
+                   <i class="fas fa-pencil-alt"></i></a>
+                   </td>
+                   <form action="/ideas/{{_id}}?_method=DELETE" method="POST">
+                    <td><button class="btn"><i class="fas fa-trash-alt"></i>
+                    </button></td>
+                   </form>
+               </tr>
+               {{/each}}
+           </tbody>
+       </table>
+    </div>
+</div>

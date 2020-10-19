@@ -3,7 +3,7 @@
 //home page
 const homePageController = (req, res) => {
     res.render('pages/index', {
-        text: 'Hello from node.js',
+        text: 'Share Idea For Better Future',
         title: 'Home page'
     });
 }

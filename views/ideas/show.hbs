@@ -2,34 +2,91 @@
   <div class="card-body">
     <h2 class="card-title">{{idea.title}}</h2>
     <div class="card-text">{{{idea.description}}}</div>
-    {{#if user}}
-    <a href="/ideas/{{idea.id}}/edit" class="btn btn-primary float-left mr-2 mt-2">Edit</a>
-    <form action="/ideas/{{idea.id}}?_method=DELETE" method="POST">
-      <button class="btn btn-danger mt-2">Delete</button>
-    </form>
-    {{else}}
-    {{/if}}
-    <div class="mt-2">
-      <em>Tags:</em>
-      {{#each idea.tags}}
-      <span class="badge badge-primary">{{this}}</span>
-      {{/each}}
+
+  <div class="like-comment mb-3">
+    <i class="far fa-thumbs-up like-btn" data-id="{{idea._id}}"></i>
+    <span class="user-id" data-id="{{user_id}}" style="display: none;"></span> 
+    
+    <span class="like-count mr-4"></span>
+    <i class="far fa-comment"></i>
+    <span class="comment-count ml-2"></span>
+    <br>
+
+  </div> 
+  
+
+  <div class="clearfix mb-3">
+    <div class=" float-left">
+        <em>Tags:</em>
+        {{#each idea.tags}}
+        <span class="badge badge-primary">{{this}}</span>
+        {{/each}}
+    </div>
+    <div class=" float-right">
+        <em>Categories:</em>
+        {{#each idea.categories}}
+        <a href="/categories/{{categoryName}}/ideas"><span class="badge badge-primary">{{categoryName}}</span></a>
+        {{/each}}
     </div>
   </div>
+
+  <div class="float-right">
+      <span>writen by <strong><a href="/users/{{idea.user.id}}/ideas">{{idea.user.firstName}}</a></strong></span>
+      {{!-- <p>{{formatDate idea.createdAt 'dd/MM/yy'}}</p> --}}
+      <p> {{formatDate idea.updatedAt 'Pp'}}</p>
+    </div>
+
+    {{#if user}}
+    <div style="display: {{compareValues idea.user.id user_id 'btn'}};">
+      <a href="/ideas/{{idea._id}}/edit" class="btn btn-primary float-left mr-2 mt-2">Edit</a>
+      <form action="/ideas/{{idea._id}}?_method=DELETE" method="POST">
+        <button class="btn btn-danger mt-2">Delete</button>
+      </form>
+    </div>
+    {{else}}
+    {{/if}}
+  </div>
 </div>
+
+
+
+{{#if user}}
+{{#if idea.allowComments}}
 <div class="card mt-2">
-  <a href="/ideas/{{idea.id}}/comments/new" class="btn btn-info">Add a Comment</a>
+  <a href="/ideas/{{idea._id}}/comments/new" class="btn btn-info">Add a Comment</a>
   <div class="card-body">
     {{#each idea.comments}}
-      <h4 class="card-title">{{title}}</h4>
-      <p class="card-text">{{text}}</p>
-      <a href="/ideas/{{../idea.id}}/comments/{{id}}/edit" class="btn btn-primary float-left mr-2 btn-sm">Edit</a>
-      <form action="/ideas/{{../idea.id}}/comments/{{id}}?_method=DELETE" method="POST">
-      <button class="btn btn-danger btn-sm">Delete</button>
-      </form>
-      <hr>
+    <div class="clearfix">
+      <div class="float-left">
+        <h4 class="card-title">{{title}}</h4>
+        <p class="card-text">{{text}}</p>
+        <div style="display:{{compareValues user.id ../user_id 'btn'}} ;">
+          <a href="/ideas/{{../idea._id}}/comments/{{_id}}/edit" class="btn btn-primary float-left mr-2 btn-sm">Edit</a>
+          <form action="/ideas/{{../idea._id}}/comments/{{_id}}?_method=DELETE" method="POST">
+            <button class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </div>
+      </div>
+      <div class="float-right">
+        <em>{{user.firstName}}</em>
+        <p> {{formatDate updatedAt 'Pp'}}</p>
+
+        {{!-- <p> {{formatDate createdAt 'dd/MM/yy'}}</p>
+        <p> {{formatDate createdAt 'hh:mm:ss b z'}}</p> --}}
+
+      </div>
+    </div>
+
+    <hr>
     {{else}}
-      <p class="card-text">No Comment to Show</p>
+    <p class="card-text">No Comment to Show</p>
     {{/each}}
   </div>
 </div>
+{{else}}
+<h5 class="text-muted text-center mt-3">Comment is not Allowed</h5>
+{{/if}}
+{{else}}
+<h5 class="text-muted text-center mt-3">You want to Write or View Comment , Please
+  <a href="/auth/login">Login</a> here</h5>
+{{/if}}

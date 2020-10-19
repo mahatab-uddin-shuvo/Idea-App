@@ -17,7 +17,9 @@ require('./config/passport').googleStrategy(passport)
 const {
     compareValues, 
     truncateContent,
-    comparePath 
+    comparePath,
+    displayBtn,
+    formatDate 
     } = require('./helpers/hbs')
 
 //database Connection
@@ -28,7 +30,8 @@ const ideaRoutes =  require('./routes/idea')
 const pageRoutes =  require('./routes/page')
 const authRoutes =  require('./routes/auth')
 const commentRoutes =  require('./routes/comment')
-
+const userRoutes =  require('./routes/user')
+const categoryRoutes =  require('./routes/category')
 
 //Import NotFound Controller
 const {notfoundPageController} = require('./controllers/pageController')
@@ -50,7 +53,9 @@ app.engine('.hbs', exphbs({
     helpers: {
         compareValues,
         truncateContent,
-        comparePath
+        comparePath,
+        displayBtn,
+        formatDate
     }
 }));
 app.set('view engine', '.hbs');
@@ -69,6 +74,7 @@ app.use(session({
 }))
 
 app.use(flash())
+app.use(express.json())
 
 //passport middleware
 app.use(passport.initialize())
@@ -97,17 +103,24 @@ app.use(express.static(path.join(__dirname, 'public')))
 // }
 
 app.use((req,res,next)=>{
-    res.locals.user = req.user || null 
+    res.locals.user = req.user || null;
+    res.locals.user_id = (req.user && req.user._id) || null;
+    res.locals.firstName = (req.user && req.user.firstName) || null;
+    res.locals.isAdmin =(req.user && req.user.role)|| null;
     res.locals.success_msg = req.flash('success_msg');
-    res.locals.error = req.flash('error')
-    res.locals.error_msg = req.flash('error_msg')
+    res.locals.error = req.flash('error');
+    res.locals.error_msg = req.flash('error_msg');
     next()
 })
+
+
 //route middleware
-app.use('/',pageRoutes)
-app.use('/auth',authRoutes)
-app.use('/ideas',ideaRoutes)
-app.use('/ideas/:id/comments',commentRoutes)
+app.use('/',pageRoutes);
+app.use('/auth',authRoutes);
+app.use('/users',userRoutes);
+app.use('/categories',categoryRoutes);
+app.use('/ideas',ideaRoutes);
+app.use('/ideas/:id/comments',commentRoutes);
 
 //notFound
 app.use('*',notfoundPageController)

@@ -1,0 +1,9 @@
+{{#each ideas}}
+    <div class="card">
+      <div class="card-body">
+      <h2 class="card-title">{{title}}</h2>
+      <div class="card-text">{{{truncateContent description 200}}}</div>
+      <a href="/ideas/{{_id}}" class="btn btn-primary mt-2">Read more </a>
+      </div>
+    </div>
+{{/each}}
