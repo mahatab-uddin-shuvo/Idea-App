@@ -56,12 +56,14 @@ const googleStrategy = (passport) => {
         clientSecret,
         callbackURL: '/auth/google/callback'
     }, async (accessToken, refreshtoken, profile, next) => {
+        
         try {
             const profileToSave = {
                 googleID: profile.id,
                 firstName: profile.name.givenName,
                 lastName: profile.name.familyName,
-                email: profile.emails[0].value
+                email: profile.emails[0].value,
+                imageURL:profile.photos[0].value
             };
             const user = await User.findOne({ googleID: profile.id })
             if (user) {

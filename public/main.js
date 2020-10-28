@@ -1,6 +1,7 @@
 const categoryForm = document.querySelector('#categoryForm');
 const categoryInput = document.querySelector('#category');
 const catMsg = document.querySelector('.catMsg');
+const msg = document.querySelector('.msg');
 const categories = document.querySelector('.categories');
 const likeBtn = document.querySelector('.like-btn');
 const likeCount = document.querySelector('.like-count');
@@ -10,13 +11,13 @@ const userId = document.querySelector('.user-id');
 
 function showMessage(info) {
   if (info.success) {
-    msg.innerHTML = `
-          <div class="alert alert-success">
+    msg.innerHTML =
+       `<div class="alert alert-success">
           ${info.message}
           </div>`;
   } else {
-    msg.innerHTML = `
-          <div class="alert alert-danger">
+    msg.innerHTML = 
+          `<div class="alert alert-danger">
           ${info.message}
           </div>`;
   }
@@ -72,7 +73,7 @@ if (categories) {
       try {
         const result = await deleteCategory(catName);
         if (result.success) {
-          catMsg.innerHTML =
+          msg.innerHTML =
             `<div class="alert alert-success">
            ${result.message}
            </div>`;
@@ -81,7 +82,7 @@ if (categories) {
           //show all categories in the views
           showCategories(categoriesResult.categories)
         } else {
-          catMsg.innerHTML =
+          msg.innerHTML =
             `<div class="alert alert-danger">
            ${result.message}
            </div>`;
@@ -107,7 +108,7 @@ if (categoryForm) {
       //add a category
       const result = await addCategory({ category: categoryName });
       if (result.success) {
-        catMsg.innerHTML = `
+        msg.innerHTML = `
          <div class="alert alert-success">
          ${result.message}
          </div>`;
@@ -119,7 +120,7 @@ if (categoryForm) {
           console.log('some problem')
         }
       } else {
-        catMsg.innerHTML =
+        msg.innerHTML =
           `<div class="alert alert-danger">
       ${result.message}
       </div>`;
@@ -200,6 +201,7 @@ if (likeBtn) {
     }
     try {
       const result = await addLike(ideaId, user)
+      console.log(result)
       //show message
       showMessage(result);
       const countResult = await getLikeCount(ideaId);
@@ -213,7 +215,8 @@ if (likeBtn) {
       showMessage({
         success: false,
         message: 'Some error ocurred in the server'
-      });    }
+      });    
+    }
   })
 }
 
@@ -225,7 +228,7 @@ async function run() {
       ideaId = likeBtn.dataset.id
      //get like count
       const likesResult = await getLikeCount(ideaId);
-
+      console.log(likesResult)
       if(likesResult.success){
         //showing like count
         showLikeCount(likesResult)
@@ -238,7 +241,7 @@ async function run() {
     if(commentCount){
    //get comment count initial load
       const commentResult = await getCommentCount(ideaId)
-
+ 
       if(commentResult.success){
         showCommentCount(commentResult)
       }else{
@@ -253,7 +256,10 @@ async function run() {
       showCategories(categoriesResult.categories)
     }
   } catch (err) {
-    console.log(err)
+    showMessage({
+      success: false,
+      message: 'Some error ocurred in the server'
+    });
   }
 }
 

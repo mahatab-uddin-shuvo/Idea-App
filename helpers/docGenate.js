@@ -9,7 +9,8 @@ const  generateIdeaDoc = function generateIdeaDoc ({
     user,
     createdAt,
     updatedAt,
-    categories
+    categories,
+    image
 }) {
     return {
         _id,
@@ -22,7 +23,8 @@ const  generateIdeaDoc = function generateIdeaDoc ({
         user,
         createdAt,
         updatedAt,
-        categories
+        categories,
+        image
     }
 }
 
@@ -37,12 +39,15 @@ const generateCommentDoc = ({_id,title,text,user,createdAt,updatedAt})=>{
     }
 }
 
-const generateUserDoc = ({ _id, firesName ,lastName ,email})=>{
+const generateUserDoc = ({ _id, firstName ,lastName ,email,imageURL,image})=>{
     return{
         _id,
-        firesName ,
+        firstName ,
         lastName ,
-        email
+        email,
+        imageURL,
+        image
+        
     };
 };
 

@@ -81,8 +81,10 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use(methodOverride('_method'))
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false })); //req.body er maddhome data pawaar jonno
 app.use(express.static(path.join(__dirname, 'public')))
+//publicly accessible from browser
+app.use(express.static(path.join(__dirname, 'uploads')))
 
 // const isAuth = (req,res,next)=>{
 //    console.log(req.cookies.isLoggedIn);

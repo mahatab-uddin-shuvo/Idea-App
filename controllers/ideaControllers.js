@@ -3,6 +3,12 @@ require('express-async-errors')
 const { check, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 const _ = require('lodash');
+const sharp = require('sharp');
+
+const fs= require('fs')
+const util = require('util')
+const deleteFilePromise  = util.promisify(fs.unlink)
+
 //doc helper
 const { generateIdeaDoc, generateCommentDoc, generateCategoryDoc } = require('../helpers/docGenate')
 
@@ -109,8 +115,9 @@ const editIdeaController = async (req, res, next) => {
 
 //add idea
 const postIdeaController = async (req, res, next) => {
+    
     req.body.tags = req.body.tags.split(',')
-
+    
     const idea = new Idea({
         ...req.body,
         allowComments: req.allowComments,
@@ -133,7 +140,22 @@ const postIdeaController = async (req, res, next) => {
         idea.categories.push({ categoryName });
     }
 
+    if(req.file){
+        const filename = Date.now() + req.file.originalname
 
+        //resize image 
+     await sharp(req.file.buffer)
+        .resize({
+            width:1200,
+            height:300
+        })
+        //.png()
+        .toFile(`./uploads/ideas/${filename}`)
+
+        //modified picked value obj and add image field value
+        idea.image = filename;
+
+    }
     await idea.save()
 
     req.flash('success_msg', 'Idea Added Successfully')
@@ -187,6 +209,9 @@ const updateIdeaController = async (req, res, next) => {
 
     const categories =[];
 
+    //getting idea 
+    const idea = await Idea.findById(id)
+
     if (Array.isArray(req.body.categories)) {
         //looping all categories and save each category in each idea
         for (let index = 0; index < req.body.categories.length; index++) {
@@ -208,12 +233,34 @@ const updateIdeaController = async (req, res, next) => {
         'tags',
         'categories'
     ]);
+
+    //upload update image
+    if(req.file){
+        const filename = Date.now() + req.file.originalname;
+
+        //resize image 
+      await sharp(req.file.buffer)
+        .resize({
+            width:1200,
+            height:300
+        })
+        //.png()
+        .toFile(`./uploads/ideas/${filename}`)
+
+        //modified picked value obj and add image field value
+        pickedValue.image = filename;
+        //deleting existing image
+        if(idea.image){
+            deleteFilePromise(`./uploads/ideas/${idea.image}`)
+        }
+    }
+
     console.log("Updated data")
     console.log(pickedValue)
 
-    const idea = await Idea.findByIdAndUpdate(id, pickedValue);
+    const updatedIdea = await Idea.findByIdAndUpdate(id, pickedValue);
 
-    if (idea) {
+    if (updatedIdea) {
         req.flash('success_msg', 'Idea Updated Successfully')
         res.redirect(`/ideas/${id}`);
     } else {
@@ -229,6 +276,11 @@ const deleteIdeaController = async (req, res, next) => {
         return res.render('pages/NotFound')
     }
     const idea = await Idea.findByIdAndDelete(id)
+    // remove idea image deleting after idea
+    if(idea.image){
+        deleteFilePromise(`./uploads/ideas/${idea.image}`)
+    }
+
     console.log('Deleted Data')
     if (idea) {
         req.flash('success_msg', 'Idea Deleted Successfully')
@@ -256,9 +308,9 @@ const postLikeController =async (req,res)=>{
         }else{
             //remove the likes from ideas array
             const likes = idea.likes.filter(
-                like=>like.toString() !== userId.toString()
-            ) 
-            idea.likes = likes
+                like => like.toString() !== userId.toString()
+              );
+              idea.likes = likes;
             await idea.save()
             res.send({
                 success: true,

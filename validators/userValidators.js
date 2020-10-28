@@ -89,6 +89,39 @@ const updateUserValidators = () =>{
         .withMessage('LastName Must be required')
         .isLength({max:100})
         .withMessage('lastName must be less then 100 character')
+        .trim(),
+
+        check('profilePic')
+        .custom((value,{req})=>{
+           const {file} = req;
+           if(file){
+            if(
+                file.mimetype === 'image/jpeg' || 
+                file.mimetype === 'image/jpg' ||
+                file.mimetype === 'image/png'
+                ){
+                   return true;   
+                }else{
+                   throw new Error('Only image file with jpeg,jpg,png is allowed')  
+                }
+           }else{
+               return true;
+           }
+        }),
+
+        check('profilePic')
+        .custom((value,{req})=>{
+           const {file} = req;
+           if(file){
+              if(file.size < 1000000){
+                   return true;   
+              }else{
+                   throw new Error('Image file less then 1 Mb is allowed')  
+                }
+           }else{
+               return true;
+           }
+        })
     ]
 }
 

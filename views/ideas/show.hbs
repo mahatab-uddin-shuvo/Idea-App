@@ -1,6 +1,13 @@
 <div class="card">
-  <div class="card-body">
-    <h2 class="card-title">{{idea.title}}</h2>
+  <div class="card-body idea">
+    <h2 class="card-title display-4">
+      {{idea.title}}
+      {{#if idea.image}}
+      <img src="{{idea.image}}" alt="{{idea.title}}">
+      {{else}}
+      <img src="/ideas/default.jpg" alt="{{idea.title}}">
+      {{/if}}
+    </h2>
     <div class="card-text">{{{idea.description}}}</div>
 
   <div class="like-comment mb-3">
@@ -60,7 +67,7 @@
       <div class="float-left">
         <h4 class="card-title">{{title}}</h4>
         <p class="card-text">{{text}}</p>
-        <div style="display:{{compareValues user.id ../user_id 'btn'}} ;">
+        <div style="display:{{compareValues  user.id   ../user_id  'btn'}} ;">
           <a href="/ideas/{{../idea._id}}/comments/{{_id}}/edit" class="btn btn-primary float-left mr-2 btn-sm">Edit</a>
           <form action="/ideas/{{../idea._id}}/comments/{{_id}}?_method=DELETE" method="POST">
             <button class="btn btn-danger btn-sm">Delete</button>

@@ -9,10 +9,19 @@
         {{>_dashboard-panel-left}}
     </div>
     <div class="col-9 p-4">
+        {{#if user.imageURL}}
+           <div class="profile-image mb-2">
+               <img src="{{user.imageURL}}" alt="{{user.firstName}}">
+           </div>
+        {{else if user.image}} 
+           <div class="profile-image mb-2">
+               <img src="/{{user.image}}" alt="{{user.firstName}}">
+           </div>
+        {{/if}}
         <ul class="list-unstyled mb-3 profile">
             <li><em>Profile Picture:</em>Please Click edit Profile to 
             Upload Profile Picture</li>
-            <li><em>FirstName:</em>{{firstName}}</li>
+            <li><em>FirstName:</em>{{user.firstName}}</li>
             <li><em>LasttName:</em>{{user.lastName}}</li>
             <li><em>Email:</em>{{user.email}}</li>
             <li><em>Password:</em>

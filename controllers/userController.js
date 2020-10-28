@@ -1,8 +1,12 @@
-const { generateUserDoc,generateIdeaDoc } = require('../helpers/docGenate');
-const User =  require('../models/user')
 const _ = require('lodash');
 const { id } = require('date-fns/locale');
+const sharp = require('sharp');
+const fs= require('fs')
+const util = require('util')
+const deleteFilePromise  = util.promisify(fs.unlink)
 
+const { generateUserDoc,generateIdeaDoc } = require('../helpers/docGenate');
+const User =  require('../models/user')
 
 const getUserController = async(req,res)=>{
 
@@ -42,10 +46,36 @@ const editUserController = async(req,res)=>{
 }
 
 const updateUserController = async(req,res)=>{
+    
     const pickedValue = _.pick(req.body, [
         'firstName',
         'lastName'
     ]);
+        
+    if(req.file){
+        const filename = Date.now() + req.file.originalname
+
+        //resize image 
+      await sharp(req.file.buffer)
+        .resize({
+            width:300,
+            height:300
+        })
+        //.png()
+        .toFile(`./uploads/${filename}`)
+
+        //modified picked value obj and add image field value
+        pickedValue.image = filename;
+        //already user logged in google , unsetting the imageURL field
+        if(req.user.imageURL){
+            req.user.imageURL = undefined
+            await req.user.save({validateBeforeSave: false})
+        }
+        //deleting existing image
+        if(req.user.image){
+            deleteFilePromise(`./uploads/${req.user.image}`)
+        }
+    }
     console.log(pickedValue);
 
     const user = await User.findByIdAndUpdate(req.user._id,pickedValue);
@@ -61,6 +91,10 @@ const updateUserController = async(req,res)=>{
 
 const deleteUserController =async (req,res)=>{
    const user = await req.user.remove();
+   if(user.image){
+       deleteFilePromise(`./uploads/${user.image}`)
+   }
+
    if(user){
        req.logout();
        req.flash('success_msg','Delete Your Account Successfully')

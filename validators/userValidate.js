@@ -62,6 +62,7 @@ const loginValidate = (req,res,next) =>{
    
  }
 
+ 
 module.exports = {
     registerValidate,
     loginValidate,

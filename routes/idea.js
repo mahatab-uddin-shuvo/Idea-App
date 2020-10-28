@@ -1,6 +1,9 @@
 const express = require('express')
 require('express-async-errors')
 const router = express.Router();
+const multer = require('multer')
+//configure multer
+const uploadIdeaImage = multer().single('ideaImage')
 //validators
 const addIdeaValidate = require('../validators/addIdeaValidate')
 const ideaValidators = require('../validators/ideaValidators')
@@ -33,13 +36,13 @@ router.get('/new',isAuth,addIdeaController);
 router.get('/:id/edit',isAuth,checkIdeaOwnership,editIdeaController);
 
 //add idea
-router.post('/',isAuth ,ideaValidators(), addIdeaValidate,postIdeaController);
+router.post('/',isAuth,uploadIdeaImage,ideaValidators(), addIdeaValidate,postIdeaController);
 
 //show single route
 router.get('/:id', getIdeaController);
 
 //update idea
-router.put('/:id',isAuth,checkIdeaOwnership,ideaValidators(),updateIdeaValidate,updateIdeaController);
+router.put('/:id',isAuth,checkIdeaOwnership,uploadIdeaImage,ideaValidators(),updateIdeaValidate,updateIdeaController);
 
 //delete idea
 router.delete('/:id',isAuth,checkIdeaOwnership,deleteIdeaController);

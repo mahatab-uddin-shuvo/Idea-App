@@ -51,6 +51,9 @@ const ideaSchema = new mongoose.Schema({
        }
     ],
     
+    image:String,
+
+    
     likes:[
         {
             type:mongoose.Types.ObjectId
