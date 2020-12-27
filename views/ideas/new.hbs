@@ -1,4 +1,4 @@
-<form action="/ideas" method="POST" enctype="multipart/form-data">
+<form action="/ideas?_csrf={{csrfToken}}" method="POST" enctype="multipart/form-data">
     <div class="form-group">
         <label for="title">Title</label>
         <input type="text" name="title" class="form-control" id="title" {{#if idea.title}}
@@ -12,6 +12,9 @@
         {{/if}}
         </textarea>
     </div>
+    {{!-- won't to work in multipart form data --}}
+    {{!-- <input type="hidden" name="_csrf" value="{{csrfToken}}"> --}}
+
     <div class="form-group">
         <label for="status">Status</label>
         <select name="status" id="status">

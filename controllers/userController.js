@@ -1,12 +1,18 @@
 const _ = require('lodash');
 const { id } = require('date-fns/locale');
 const sharp = require('sharp');
-const fs= require('fs')
-const util = require('util')
+const fs= require('fs');
+const util = require('util');
+const nodemailer = require('nodemailer');
 const deleteFilePromise  = util.promisify(fs.unlink)
-
-const { generateUserDoc,generateIdeaDoc } = require('../helpers/docGenate');
+const { generateUserDoc,generateIdeaDoc,generateCategoryDoc } = require('../helpers/docGenate');
+const {accountDeleteEmail} = require('../email/account') 
 const User =  require('../models/user')
+const Category =  require('../models/category')
+
+const mailConfig = require ('../config/mailConfig');
+//configuring transport
+const transporter = nodemailer.createTransport(mailConfig);
 
 const getUserController = async(req,res)=>{
 
@@ -97,6 +103,8 @@ const deleteUserController =async (req,res)=>{
 
    if(user){
        req.logout();
+        transporter.sendMail(accountDeleteEmail(user.email))  
+       console.log("Delete your account");
        req.flash('success_msg','Delete Your Account Successfully')
        res.redirect('/ideas');
    }else{
@@ -108,17 +116,49 @@ const deleteUserController =async (req,res)=>{
 
 const getUserIdeasController =async (req,res)=>{
    const id  = req.params.id;
-  const user = await User.findById(id).populate('ideas');
+   const page = +req.query.page || 1;
+   const item_per_page = 1;
+
+   const user = await User.findById(id).populate({
+       path:'ideas',
+    //    select:'title description',
+       options:{
+           sort:{
+            updatedAt:-1
+           }
+       }
+   });
+
+   //get categories
+   const category = await Category.find()
+   //creating categories context to avoid hbs error
+   const categoriesContext = category.map(category => generateCategoryDoc(category) )
+   
   if(user){
+      
       //get all ideas and avoid hbs error
       const contextIdeas = user.ideas.map(idea => generateIdeaDoc(idea));
       //filtering public ideas
       const publicIdeas = contextIdeas.filter(idea=>idea.status === 'public')
-   res.render('ideas/index',{
-       title:`All Idas By ${user.firstName}`,
-       ideas:publicIdeas,
+       // count category public ideas 
+       const userePublicIdeaCount = publicIdeas.length;
+       //idea to pass (pagination)
+       const userPublicIdeasToPass = publicIdeas.splice((page-1)*item_per_page,item_per_page)
+     
+       res.render('ideas/index',{
+       title:`All Ideas By ${user.firstName}`,
+       ideas:userPublicIdeasToPass,
        firstName:user.firstName,
-       userRef:true
+       currentPage:page,
+       previousPage:page-1,
+       nextPage:page+1,
+       hasPreviousPage:page > 1,
+       hasNextPage:page * item_per_page < userePublicIdeaCount,
+       lastPage: Math.ceil(userePublicIdeaCount/item_per_page),
+       userRef:true,
+       userId:user._id,
+       ideasTags:contextIdeas,
+       categories:categoriesContext
    })
   }else{
     res.status(404).render('pages/NotFound')

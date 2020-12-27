@@ -62,9 +62,38 @@ const loginValidate = (req,res,next) =>{
    
  }
 
+ const forgetPasswordValidate = (req,res,next) =>{
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+         res.render('auth/forget-password',{
+            title:'Reset Password',
+            errMsg: errors.array()[0].msg,
+            userInput:{
+                email: req.body.email,
+            }
+        })
+    }
+    else{
+        next()
+    }
+ }
  
+ const resetPasswordValidate = (req,res,next) =>{
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+        const {token} = req.body;
+        req.flash('error_msg', errors.array()[0].msg)
+        res.redirect(`/auth/reset-password/${token}`); 
+    }
+    else{
+        next()
+    }
+ }
+
 module.exports = {
     registerValidate,
     loginValidate,
-    updateUserValidate
+    updateUserValidate,
+    forgetPasswordValidate,
+    resetPasswordValidate
 }

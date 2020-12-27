@@ -52,6 +52,7 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
+    resetPasswordToken : String,
     image:String,
     imageURL:String,
     role:{

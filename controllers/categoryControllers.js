@@ -45,8 +45,14 @@ const deleteCategoryController= async(req,res)=>{
 const getCatIdeasController = async(req,res)=>{
    const catName  = req.params.cat_name;
 
+   const page = +req.query.page || 1;
+   const item_per_page = 1;
+
+
     //getting all idea
-    const ideas = await Idea.find();
+    const ideas = await Idea
+    .find()
+    .sort({updatedAt:-1});
 
     //creating all ideas context to avoid error
     const ideasContext = ideas.map(idea=>generateIdeaDoc(idea))
@@ -80,18 +86,29 @@ const getCatIdeasController = async(req,res)=>{
        const ideaContext = category.ideas.map(idea=>generateIdeaDoc(idea))
        //finding public ideas form ideacontext
        const publicIdeas =  ideaContext.filter(idea => idea.status === 'public')
-      
+       // count category public ideas 
+       const catePublicIdeaCount = publicIdeas.length;
+       //idea to pass (pagination)
+       const catPublicIdeasToPass = publicIdeas.splice((page-1)*item_per_page,item_per_page)
+
+
        res.render('ideas/index',{
            title:`All ideas under ${category.category}`,
-           ideas:publicIdeas,
+           ideas:catPublicIdeasToPass,
            catName:category.category,
            categories:categoryContext,
            ideasTags:ideasContext,
-           catRef:'category'
+           currentPage:page,
+           previousPage:page - 1,
+           nextPage:page + 1,
+           hasPreviousPage:page > 1,
+           hasNextPage:page * item_per_page < catePublicIdeaCount,
+           lastPage: Math.ceil(catePublicIdeaCount/item_per_page),
+           catRef: true
            
        })
    }else{
-    res.status(404).render('pages/NotFound',{
+    res.status(404).render('pages.NotFound',{
         title:'Not Found'
     })
 

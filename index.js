@@ -7,7 +7,12 @@ const path = require('path');
 const passport = require('passport')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')(session);
-const flash = require('connect-flash')
+const flash = require('connect-flash');
+const csrf = require('csurf');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+
 
 //configuring passport 
 require('./config/passport').localStrategy(passport)
@@ -47,7 +52,6 @@ connectDB()
 
 const app = express();
 
-
 app.engine('.hbs', exphbs({
     extname: '.hbs',
     helpers: {
@@ -73,8 +77,19 @@ app.use(session({
     }
 }))
 
+//middleware for showing flash message
 app.use(flash())
+
+//set different headers by helmet
+app.use(helmet())
+
+//senitize user data to prevent nosql injection attack(operator) 
+app.use(mongoSanitize());
+//xss protection
+app.use(xss());
+
 app.use(express.json())
+
 
 //passport middleware
 app.use(passport.initialize())
@@ -82,6 +97,9 @@ app.use(passport.session())
 
 app.use(methodOverride('_method'))
 app.use(express.urlencoded({ extended: false })); //req.body er maddhome data pawaar jonno
+//using by after body parser
+app.use(csrf())
+
 app.use(express.static(path.join(__dirname, 'public')))
 //publicly accessible from browser
 app.use(express.static(path.join(__dirname, 'uploads')))
@@ -105,10 +123,12 @@ app.use(express.static(path.join(__dirname, 'uploads')))
 // }
 
 app.use((req,res,next)=>{
+    //setting global variable(can be access by any template)
     res.locals.user = req.user || null;
     res.locals.user_id = (req.user && req.user._id) || null;
     res.locals.firstName = (req.user && req.user.firstName) || null;
     res.locals.isAdmin =(req.user && req.user.role)|| null;
+    res.locals.csrfToken = req.csrfToken();
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error = req.flash('error');
     res.locals.error_msg = req.flash('error_msg');

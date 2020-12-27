@@ -22,11 +22,26 @@ const { updateUserValidate } = require('../validators/userValidate');
 const getIdeasController = async (req, res, next) => {
 
     console.log(req.user)
+
+    const page = +req.query.page || 1;
+    const item_per_page = 1;
+
+    const totalPublicIdeaCount = await Idea.find({
+        status: 'public'
+    }).countDocuments();
+
+    //build the query
+    const publicIdeas = await Idea
+    .find({status:'public'})
+    .skip((page-1)*item_per_page)
+    .sort({updatedAt:-1}) //-1 => descending, 1 => accending
+    .limit(item_per_page)
+
     //getting all idea
     const ideas = await Idea.find();
 
     //get all filtering  public ideas
-    const publicIdeas = ideas.filter(idea => idea.status === 'public')
+    // const publicIdeas = ideas.filter(idea => idea.status === 'public')
     
     //creating public ideas context to avoid error
     const ideasPublicContext = publicIdeas.map(publicIdea=>generateIdeaDoc(publicIdea))
@@ -46,7 +61,13 @@ const getIdeasController = async (req, res, next) => {
         title: 'All Ideas',
         categories:categoryContext,
         ideasTags:ideasContext,
-        path: '/ideas'
+        currentPage:page,
+        previousPage:page-1,
+        nextPage:page+1,
+        hasPreviousPage:page > 1,
+        hasNextPage:page * item_per_page < totalPublicIdeaCount,
+        lastPage: Math.ceil(totalPublicIdeaCount/item_per_page),
+        path:'/ideas'
 
     });
 };

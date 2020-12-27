@@ -125,10 +125,53 @@ const updateUserValidators = () =>{
     ]
 }
 
+const forgetPasswordValidators = ()=>{
+    return[
+        check('email')
+        .notEmpty()
+        .withMessage('Email Must be Required')
+        .isEmail()
+        .withMessage('Email Must be Valid'),
+       check('email').custom(async(email) =>{
+          const user = await User.findOne({email});
+          if(!user){
+              throw new Error('User not Exist')
+          } else{
+              return true;
+          }
+       }) 
+    ]
+}
 
+const resetPasswordValidators = ()=>{
+    return[
+      check('password')
+      .notEmpty()
+      .withMessage('Password is Must be required')
+      .isLength({min:6,max:50})
+      .withMessage('Password is Must be in between 6 to 50 character')
+      .not()
+      .isIn(['password','123456','god123'])
+      .withMessage('Password must not contain common password'),
+
+      check('confirmPassword')
+      .notEmpty()
+      .withMessage('Confirm Password is Must be required')
+      .custom((confirmPassword,{req})=>{
+          if(confirmPassword == req.body.password){
+              return true
+          }else{
+              throw new Error("Confirm password don't match")
+          }
+      })
+
+    ]
+}
 
 module.exports = {
     registerValidators,
     loginValidators,
-    updateUserValidators
+    updateUserValidators,
+    forgetPasswordValidators,
+    resetPasswordValidators
 }

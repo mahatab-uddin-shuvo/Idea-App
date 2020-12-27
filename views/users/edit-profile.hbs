@@ -10,13 +10,14 @@
     </div>
     <div class="col-9 p-4">
         <h3 class="mb-3">Edit Profile</h3>
-        <form action="/users/me?_method=PUT" method="POST" enctype="multipart/form-data">
+        <form action="/users/me?_method=PUT&_csrf={{csrfToken}}" method="POST" enctype="multipart/form-data">
              <div class="form-group ">
                     <label for="firstName">FirstName</label>
                     <input type="text" name="firstName" id="firstName" class="form-control"
                     value="{{userInput.firstName}}" 
                     >
                 </div>
+
                 <div class="form-group ">
                     <label for="lastName">LastName</label>
                     <input type="text" name="lastName" id="lastName" class="form-control"

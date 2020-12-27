@@ -6,6 +6,9 @@
                 <input type="text" name="title" class="form-control" placeholder="Title of Your comment" 
                 >
             </div>
+
+            <input type="hidden" name="_csrf" value="{{csrfToken}}">
+
             <div class="form-group">
                 <textarea name="text" class="form-control" placeholder="Write more"></textarea>  
             </div>

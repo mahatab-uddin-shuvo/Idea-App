@@ -1,4 +1,5 @@
-const {format} = require('date-fns')
+const {format} = require('date-fns');
+const { values } = require('lodash');
 
 const compareValues = (value1,value2,value3)=>{
     switch(value3){
@@ -13,7 +14,9 @@ const compareValues = (value1,value2,value3)=>{
         case 'btn':  
             return value1.equals(value2) ? 'block' : 'none';
             break;
-
+        case 'neq':
+            return value1 !== value2;
+            break;
         default:
     }   
 }

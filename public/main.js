@@ -7,7 +7,10 @@ const likeBtn = document.querySelector('.like-btn');
 const likeCount = document.querySelector('.like-count');
 const commentCount = document.querySelector('.comment-count');
 const userId = document.querySelector('.user-id');
-
+ 
+// Read the CSRF token from the <meta> tag
+var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+ 
 
 function showMessage(info) {
   if (info.success) {
@@ -35,6 +38,9 @@ function showCategories(catsResult) {
 
 async function deleteCategory(catName) {
   const response = await fetch(`/categories/${catName}`, {
+    headers:{
+      'CSRF-Token': token
+    },
     method: 'DELETE'
   })
   return await response.json()
@@ -46,7 +52,8 @@ async function addCategory(data) {
     const response = await fetch('/categories', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'CSRF-Token': token
       },
       body: JSON.stringify(data)
     })
@@ -144,7 +151,8 @@ async function addLike(id, userId) {
     const response = await fetch(`/ideas/${id}/likes`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'CSRF-Token': token
       },
       body: JSON.stringify({
         userId
